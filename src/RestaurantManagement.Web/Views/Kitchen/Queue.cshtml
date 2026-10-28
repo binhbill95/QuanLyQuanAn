@@ -1,0 +1,59 @@
+@model IReadOnlyList<KitchenQueueItemDto>
+@{
+    ViewData["Title"] = "Hàng đợi bếp";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Hàng đợi bếp</h1>
+        <p class="text-muted mb-0">Món đang chờ hoặc đang chế biến, sắp theo thứ tự gọi.</p>
+    </div>
+    <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-secondary">Gọi món</a>
+</div>
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+@if (Model.Count == 0)
+{
+    <div class="alert alert-light border text-center text-muted">Không có món trong hàng đợi.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-xl-4">
+                <article class="card h-100 @(item.Status == 1 ? "border-primary" : "border-warning")">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-2">
+                            <h2 class="h5">@item.ItemName</h2>
+                            <span class="badge @(item.Status == 1 ? "bg-primary" : "bg-warning text-dark")">
+                                @(item.Status == 1 ? "Đang chế biến" : "Đang chờ")
+                            </span>
+                        </div>
+                        <div class="fs-5 fw-semibold">Số lượng: @item.Quantity</div>
+                        <div class="small text-muted">Bàn @(item.TableNumber ?? "—") · @item.InvoiceCode · @item.ItemCode</div>
+                        @if (!string.IsNullOrWhiteSpace(item.Note))
+                        {
+                            <div class="alert alert-light border mt-3 mb-2"><strong>Ghi chú:</strong> @item.Note</div>
+                        }
+                        <div class="small text-muted">Đã chờ @(item.WaitingMinutes ?? 0) phút · gọi lúc @item.OrderedAt.ToLocalTime().ToString("HH:mm:ss")</div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <form asp-action="SetStatus" method="post">
+                            <input type="hidden" name="detailId" value="@item.DetailId" />
+                            <input type="hidden" name="status" value="@(item.Status == 0 ? 1 : 2)" />
+                            <button type="submit" class="btn @(item.Status == 0 ? "btn-primary" : "btn-success") w-100">
+                                @(item.Status == 0 ? "Nhận chế biến" : "Đánh dấu hoàn thành")
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}

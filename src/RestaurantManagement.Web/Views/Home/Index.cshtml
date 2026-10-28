@@ -1,0 +1,157 @@
+﻿@{
+    ViewData["Title"] = "Trang chủ";
+
+    var fullName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name;
+    var roleCode = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+    var isManagement = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER");
+    var canTakeOrders = isManagement || User.IsInRole("WAITER") || User.IsInRole("CASHIER");
+    var canUseKitchen = isManagement || User.IsInRole("KITCHEN");
+    var canTakePayment = User.IsInRole("MANAGER") || User.IsInRole("CASHIER");
+}
+
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h1 class="h3 mb-1">Xin chào, @fullName</h1>
+        <p class="text-muted mb-0">Vai trò: <span class="badge bg-secondary">@roleCode</span></p>
+    </div>
+    <div class="text-muted small">@DateTime.Now.ToString("dddd, dd/MM/yyyy HH:mm")</div>
+</div>
+
+<div class="row g-3">
+    @if (isManagement)
+    {
+        <div class="col-md-4">
+            <a asp-controller="Employees" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Quản lý nhân viên</h2>
+                        <p class="card-text small text-muted">Hồ sơ nhân viên, tìm kiếm, xóa mềm.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="Shifts" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Ca làm &amp; lịch ca</h2>
+                        <p class="card-text small text-muted">Cấu hình ca, phân ca nhân viên, xếp lịch theo ngày.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    }
+
+    <div class="col-md-4">
+        <a asp-controller="Menu" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 card-title">Thực đơn</h2>
+                    <p class="card-text small text-muted">Xem món theo nhóm, giá bán và tình trạng còn/hết.</p>
+                    <span class="badge bg-success">Đã có</span>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a asp-controller="Tables" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 card-title">Bàn ăn</h2>
+                    <p class="card-text small text-muted">Sơ đồ bàn theo khu vực và trạng thái phục vụ.</p>
+                    <span class="badge bg-success">Đã có</span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-4">
+        <a asp-controller="Attendance" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h2 class="h6 card-title">Chấm công</h2>
+                    <p class="card-text small text-muted">Check-in/check-out theo ca, duyệt công.</p>
+                    <span class="badge bg-success">Đã có</span>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    @if (User.IsInRole("ADMIN"))
+    {
+        <div class="col-md-4">
+            <a asp-controller="Accounts" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Tài khoản</h2>
+                        <p class="card-text small text-muted">Cấp tài khoản, đổi vai trò, đặt lại mật khẩu, khóa/mở.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+
+    @if (canTakeOrders)
+    {
+        <div class="col-md-4">
+            <a asp-controller="Orders" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Gọi món</h2>
+                        <p class="card-text small text-muted">Mở bàn, gọi thêm món, hủy món chờ, chuyển/gộp bàn.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+    @if (canUseKitchen)
+    {
+        <div class="col-md-4">
+            <a asp-controller="Kitchen" asp-action="Queue" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Hàng đợi bếp</h2>
+                        <p class="card-text small text-muted">Nhận món, theo dõi FIFO và cập nhật hoàn thành.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+
+    @if (canTakePayment)
+    {
+        <div class="col-md-4">
+            <a asp-controller="Payments" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Thanh toán</h2>
+                        <p class="card-text small text-muted">Tính tiền, giảm giá theo quyền, in hóa đơn và giải phóng bàn.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+
+    @if (isManagement)
+    {
+        <div class="col-md-4">
+            <a asp-controller="Reports" asp-action="Index" class="text-decoration-none text-reset">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h6 card-title">Báo cáo</h2>
+                        <p class="card-text small text-muted">Doanh thu, khách, món bán, ca làm và lương.</p>
+                        <span class="badge bg-success">Đã có</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    }
+</div>

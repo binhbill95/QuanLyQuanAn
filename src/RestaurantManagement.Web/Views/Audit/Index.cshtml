@@ -1,0 +1,170 @@
+@model AuditIndexViewModel
+@{
+    ViewData["Title"] = "Nhật ký thao tác";
+    var filter = Model.Filter;
+    var results = Model.Results;
+    var firstRow = results.TotalCount == 0 ? 0 : (results.Page - 1) * results.PageSize + 1;
+    var lastRow = Math.Min(results.Page * results.PageSize, results.TotalCount);
+}
+
+<div class="mb-3">
+    <h1 class="h3 mb-1">Nhật ký thao tác</h1>
+    <p class="text-muted mb-0">
+        Theo dõi thay đổi dữ liệu quan trọng và lịch sử chuyển/gộp bàn.
+        Thời gian hiển thị theo giờ Việt Nam.
+    </p>
+</div>
+
+<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+<div class="alert alert-info">
+    Nhật ký dữ liệu hiện áp dụng cho nhân viên, nhóm món, món ăn, ca làm, lịch làm,
+    chấm công, hóa đơn, chi tiết món, thanh toán và tài khoản (không lưu mật khẩu).
+    Các bản ghi cũ trước khi bật ghi nhận người thao tác có thể chưa xác định được tài khoản thực hiện.
+</div>
+
+<form method="get" class="card card-body mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-sm-6 col-lg-2">
+            <label for="FromDate" class="form-label">Từ ngày</label>
+            <input id="FromDate" name="FromDate" type="date" class="form-control"
+                   value="@filter.FromDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <label for="ToDate" class="form-label">Đến ngày</label>
+            <input id="ToDate" name="ToDate" type="date" class="form-control"
+                   value="@filter.ToDate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <label for="Operation" class="form-label">Thao tác</label>
+            <select id="Operation" name="Operation" class="form-select">
+                <option value="">Tất cả</option>
+                @foreach (var action in new[] { "INSERT", "UPDATE", "DELETE", "Chuyển bàn", "Gộp bàn" })
+                {
+                    <option value="@action" selected="@(filter.Action == action)">@action</option>
+                }
+            </select>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <label for="Search" class="form-label">Từ khóa</label>
+            <input id="Search" name="Search" value="@filter.Search" maxlength="100"
+                   class="form-control" placeholder="Người thao tác, bảng, mã bản ghi..." />
+        </div>
+        <div class="col-lg-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Lọc</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+        </div>
+    </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <span class="text-muted">Hiển thị @firstRow–@lastRow / @results.TotalCount bản ghi</span>
+    <span class="text-muted small">Mới nhất trước</span>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Thời gian</th>
+                <th>Người thao tác</th>
+                <th>Thao tác</th>
+                <th>Đối tượng</th>
+                <th>Mã bản ghi</th>
+                <th>Chi tiết</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (results.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Không tìm thấy nhật ký phù hợp.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var item in results.Items)
+                {
+                    <tr>
+                        <td class="text-nowrap">@item.ChangedAt.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                        <td>
+                            @if (item.Actor is null)
+                            {
+                                <span class="text-muted">Chưa ghi nhận</span>
+                            }
+                            else
+                            {
+                                @item.Actor
+                            }
+                        </td>
+                        <td>
+                            @if (item.Action is "INSERT" or "Chuyển bàn")
+                            {
+                                <span class="badge bg-success">@item.Action</span>
+                            }
+                            else if (item.Action is "DELETE" or "Gộp bàn")
+                            {
+                                <span class="badge bg-warning text-dark">@item.Action</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@item.Action</span>
+                            }
+                        </td>
+                        <td>@item.TableName</td>
+                        <td>@item.RecordId</td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(item.Summary))
+                            {
+                                <span>@item.Summary</span>
+                            }
+                            @if (item.OldValues is not null || item.NewValues is not null)
+                            {
+                                <details>
+                                    <summary class="text-primary">Xem dữ liệu thay đổi</summary>
+                                    @if (item.OldValues is not null)
+                                    {
+                                        <div class="small fw-semibold mt-2">Trước</div>
+                                        <pre class="small text-wrap mb-2">@item.OldValues</pre>
+                                    }
+                                    @if (item.NewValues is not null)
+                                    {
+                                        <div class="small fw-semibold">Sau</div>
+                                        <pre class="small text-wrap mb-0">@item.NewValues</pre>
+                                    }
+                                </details>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.PageCount > 1)
+{
+    <nav aria-label="Phân trang nhật ký">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(results.Page <= 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-route-FromDate="@filter.FromDate?.ToString("yyyy-MM-dd")"
+                   asp-route-ToDate="@filter.ToDate?.ToString("yyyy-MM-dd")"
+                   asp-route-Operation="@filter.Action"
+                   asp-route-Search="@filter.Search"
+                   asp-route-Page="@(results.Page - 1)">Trước</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Trang @results.Page / @Model.PageCount</span>
+            </li>
+            <li class="page-item @(results.Page >= Model.PageCount ? "disabled" : "")">
+                <a class="page-link"
+                   asp-route-FromDate="@filter.FromDate?.ToString("yyyy-MM-dd")"
+                   asp-route-ToDate="@filter.ToDate?.ToString("yyyy-MM-dd")"
+                   asp-route-Operation="@filter.Action"
+                   asp-route-Search="@filter.Search"
+                   asp-route-Page="@(results.Page + 1)">Sau</a>
+            </li>
+        </ul>
+    </nav>
+}

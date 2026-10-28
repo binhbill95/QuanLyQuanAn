@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản lý quán ăn</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/RestaurantManagement.Web.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Quản lý quán ăn</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-xl-inline-flex justify-content-between" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                            </li>
+                            var canUseOrders = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER") ||
+                                User.IsInRole("WAITER") || User.IsInRole("CASHIER");
+                            var canUseKitchen = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER") ||
+                                User.IsInRole("KITCHEN");
+                            var canManage = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER");
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Bán hàng (POS)
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Menu" asp-action="Index">Thực đơn</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Tables" asp-action="Index">Bàn ăn</a></li>
+                                    @if (canUseOrders)
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Orders" asp-action="Index">Gọi món</a></li>
+                                    }
+                                    @if (User.IsInRole("MANAGER") || User.IsInRole("CASHIER"))
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Payments" asp-action="Index">Thanh toán</a></li>
+                                    }
+                                    @if (canUseKitchen)
+                                    {
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Kitchen" asp-action="Queue">Bếp</a></li>
+                                    }
+                                </ul>
+                            </li>
+                            @if (canManage)
+                            {
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Quản lý
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Reports" asp-action="Index">Báo cáo</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Categories" asp-action="Index">Nhóm món</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Employees" asp-action="Index">Nhân viên</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Shifts" asp-action="Index">Ca làm</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Schedules" asp-action="Index">Lịch ca</a></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Audit" asp-action="Index">Nhật ký thao tác</a></li>
+                                        @if (User.IsInRole("ADMIN"))
+                                        {
+                                            <li><a class="dropdown-item" asp-area="" asp-controller="Accounts" asp-action="Index">Tài khoản</a></li>
+                                        }
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="Attendance" asp-action="Index">Chấm công</a></li>
+                                    </ul>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="" asp-controller="Attendance" asp-action="Index">Chấm công</a>
+                                </li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            var roleName = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                            <li class="nav-item">
+                                <span class="navbar-text me-3">
+                                    @User.Identity.Name
+                                    <span class="badge bg-secondary ms-1">@roleName</span>
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="ChangePassword">Đổi mật khẩu</a>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-link nav-link text-dark">Đăng xuất</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">Đăng nhập</a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - Hệ thống quản lý quán ăn
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

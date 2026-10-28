@@ -1,0 +1,63 @@
+@model PaymentIndexViewModel
+@{
+    ViewData["Title"] = "Thanh toán";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Thanh toán</h1>
+        <p class="text-muted mb-0">Chọn hóa đơn đang phục vụ để tính tiền và đóng bàn.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Hóa đơn</th>
+                    <th>Bàn</th>
+                    <th class="text-end">Khách</th>
+                    <th>Giờ mở</th>
+                    <th class="text-end">Tạm tính</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Invoices.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Không có hóa đơn đang chờ thanh toán.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var invoice in Model.Invoices)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@invoice.InvoiceCode</td>
+                            <td>@string.Join(", ", invoice.Tables.Select(table => table.Number))</td>
+                            <td class="text-end">@invoice.CustomerCount</td>
+                            <td>@invoice.OpenedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">@invoice.Subtotal.ToString("N0") đ</td>
+                            <td class="text-end">
+                                <a asp-action="Checkout" asp-route-invoiceId="@invoice.Id" class="btn btn-sm btn-primary">
+                                    Tính tiền
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,168 @@
+@model ScheduleIndexViewModel
+@{
+    ViewData["Title"] = "Lịch ca";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Lịch ca</h1>
+        <p class="text-muted mb-0">Xếp ca theo ngày cho nhân viên</p>
+    </div>
+    <a asp-controller="Attendance" asp-action="Index" class="btn btn-outline-primary">Chấm công</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h6 card-title mb-3">Xếp ca mới</h2>
+
+        @if (Model.Employees.Count == 0 || Model.Shifts.Count == 0)
+        {
+            <p class="text-muted mb-0">
+                Cần có nhân viên đang làm việc và ca đang sử dụng.
+                <a asp-controller="Shifts" asp-action="Assignments">Phân ca nhân viên</a> trước khi xếp lịch.
+            </p>
+        }
+        else
+        {
+            <form asp-action="Create" method="post" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label" for="employeeId">Nhân viên</label>
+                    <select name="employeeId" id="employeeId" class="form-select">
+                        @foreach (var employee in Model.Employees)
+                        {
+                            <option value="@employee.Id">@employee.Code – @employee.FullName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label" for="shiftId">Ca</label>
+                    <select name="shiftId" id="shiftId" class="form-select">
+                        @foreach (var shift in Model.Shifts)
+                        {
+                            <option value="@shift.Id">
+                                @shift.Name (@shift.StartTime.ToString("HH:mm")–@shift.EndTime.ToString("HH:mm"))
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label" for="workDate">Ngày</label>
+                    <input type="date" name="workDate" id="workDate" class="form-control"
+                           value="@DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label" for="note">Ghi chú</label>
+                    <input name="note" id="note" class="form-control" />
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Xếp ca</button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label small" for="from">Từ ngày</label>
+        <input type="date" id="from" name="from" class="form-control" value="@Model.From.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small" for="to">Đến ngày</label>
+        <input type="date" id="to" name="to" class="form-control" value="@Model.To.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small" for="employeeFilter">Nhân viên</label>
+        <select id="employeeFilter" name="employeeId" class="form-select">
+            <option value="">— Tất cả —</option>
+            @foreach (var employee in Model.Employees)
+            {
+                <option value="@employee.Id" selected="@(Model.EmployeeId == employee.Id)">
+                    @employee.Code – @employee.FullName
+                </option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-outline-primary">Xem</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Tuần này</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Ngày</th>
+                <th>Ca</th>
+                <th>Nhân viên</th>
+                <th>Ghi chú</th>
+                <th>Trạng thái</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Schedules.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Chưa có lịch ca trong khoảng này.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var schedule in Model.Schedules)
+                {
+                    <tr>
+                        <td>@schedule.WorkDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <div>@schedule.ShiftName</div>
+                            <div class="text-muted small">@schedule.StartTime.ToString("HH:mm") – @schedule.EndTime.ToString("HH:mm")</div>
+                        </td>
+                        <td>
+                            <div>@schedule.EmployeeName</div>
+                            <div class="text-muted small">@schedule.EmployeeCode</div>
+                        </td>
+                        <td>@(schedule.Note ?? "—")</td>
+                        <td>
+                            @if (schedule.HasAttendance)
+                            {
+                                <span class="badge bg-info text-dark">Đã chấm công</span>
+                            }
+                            else if (schedule.Status == 1)
+                            {
+                                <span class="badge bg-success">Đã duyệt</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <form asp-action="Delete" asp-route-id="@schedule.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa lịch ca này?');">
+                                <input type="hidden" name="from" value="@Model.From.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="to" value="@Model.To.ToString("yyyy-MM-dd")" />
+                                <input type="hidden" name="employeeId" value="@Model.EmployeeId" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,136 @@
+@model EmployeeIndexViewModel
+@{
+    ViewData["Title"] = "Nhân viên";
+    var paging = Model.Employees;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Nhân viên</h1>
+        <p class="text-muted mb-0">Tổng cộng @paging.TotalCount nhân viên</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Thêm nhân viên</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input name="keyword" value="@Model.Keyword" class="form-control"
+               placeholder="Mã, họ tên hoặc điện thoại" />
+    </div>
+    <div class="col-md-3">
+        <select name="positionId" class="form-select">
+            <option value="">— Tất cả vị trí —</option>
+            @foreach (var position in Model.Positions)
+            {
+                <option value="@position.Id" selected="@(Model.PositionId == position.Id)">@position.Name</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="status" class="form-select">
+            <option value="">— Trạng thái —</option>
+            @foreach (var option in EmployeeFormViewModel.StatusOptions)
+            {
+                <option value="@option.Value" selected="@(Model.Status?.ToString() == option.Value)">@option.Text</option>
+            }
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-outline-primary">Tìm kiếm</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Mã</th>
+                <th>Họ và tên</th>
+                <th>Vị trí</th>
+                <th>Điện thoại</th>
+                <th>Ngày vào làm</th>
+                <th>Trạng thái</th>
+                <th>Tài khoản</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (paging.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">Không tìm thấy nhân viên nào.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var employee in paging.Items)
+                {
+                    <tr>
+                        <td class="fw-semibold">@employee.EmployeeCode</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@employee.Id" class="text-decoration-none">
+                                @employee.FullName
+                            </a>
+                        </td>
+                        <td>@employee.PositionName</td>
+                        <td>@(employee.Phone ?? "—")</td>
+                        <td>@employee.StartDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="badge @EmployeeDisplay.StatusBadgeClass(employee.Status)">
+                                @EmployeeDisplay.StatusLabel(employee.Status)
+                            </span>
+                        </td>
+                        <td>
+                            @if (employee.HasAccount)
+                            {
+                                <span class="badge bg-info text-dark">Có</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a asp-action="Details" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-secondary">Chi tiết</a>
+                            <a asp-action="Edit" asp-route-id="@employee.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                            <form asp-action="Delete" asp-route-id="@employee.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa nhân viên @employee.FullName? Dữ liệu sẽ được ẩn khỏi danh sách nhưng vẫn giữ trong CSDL.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (paging.TotalPages > 1)
+{
+    <nav aria-label="Phân trang nhân viên">
+        <ul class="pagination">
+            @for (var pageNumber = 1; pageNumber <= paging.TotalPages; pageNumber++)
+            {
+                <li class="page-item @(pageNumber == paging.Page ? "active" : string.Empty)">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-page="@pageNumber"
+                       asp-route-keyword="@Model.Keyword"
+                       asp-route-positionId="@Model.PositionId"
+                       asp-route-status="@Model.Status">@pageNumber</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

@@ -1,0 +1,27 @@
+## Build & tool
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+.vs/
+*.dbmdl
+*.log
+
+## Test
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+
+## Env / secrets
+.env
+appsettings.Production.json
+
+## OS
+Thumbs.db
+.DS_Store
+
+## Database
+database/backup/*.bak
+/docs/10_Quan-ly-quan-an.pdf

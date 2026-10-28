@@ -1,0 +1,89 @@
+@model AccountCreateViewModel
+@{
+    ViewData["Title"] = "Tạo tài khoản";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Tạo tài khoản</h1>
+        <p class="text-muted mb-0">Cấp tài khoản đăng nhập cho nhân viên đang làm việc</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Danh sách</a>
+</div>
+
+@if (Model.Employees.Count == 0)
+{
+    <div class="alert alert-info">
+        Tất cả nhân viên đang làm việc đã có tài khoản.
+        <a asp-controller="Employees" asp-action="Index">Quay lại danh sách nhân viên</a>.
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="EmployeeId" class="form-label"></label>
+                        <select asp-for="EmployeeId" class="form-select">
+                            <option value="0">— Chọn nhân viên —</option>
+                            @foreach (var employee in Model.Employees)
+                            {
+                                <option value="@employee.Id">
+                                    @employee.Code – @employee.FullName (@employee.PositionName)
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="EmployeeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="RoleId" class="form-label"></label>
+                        <select asp-for="RoleId" class="form-select">
+                            <option value="0">— Chọn vai trò —</option>
+                            @foreach (var role in Model.Roles)
+                            {
+                                <option value="@role.Id">@role.Name (@role.Code)</option>
+                            }
+                        </select>
+                        <span asp-validation-for="RoleId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Username" class="form-label"></label>
+                        <input asp-for="Username" class="form-control" autocomplete="off" placeholder="vd: nv003" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <p class="text-muted small mt-3 mb-0">
+                    Mật khẩu tối thiểu 6 ký tự. Tài khoản có hiệu lực ngay sau khi tạo.
+                </p>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

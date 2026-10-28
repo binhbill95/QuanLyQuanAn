@@ -1,0 +1,84 @@
+@model IReadOnlyList<EmployeeShiftAssignmentDto>
+@{
+    ViewData["Title"] = "Phân ca nhân viên";
+    var keyword = ViewData["Keyword"] as string;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Phân ca nhân viên</h1>
+        <p class="text-muted mb-0">Chọn những ca mà nhân viên có thể làm</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Quay lại ca làm</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form method="get" asp-action="Assignments" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input name="keyword" value="@keyword" class="form-control" placeholder="Mã hoặc họ tên nhân viên" />
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+        <a asp-action="Assignments" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Mã</th>
+                <th>Họ và tên</th>
+                <th>Vị trí</th>
+                <th>Ca có thể làm</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">Không có nhân viên đang làm việc.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var employee in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@employee.EmployeeCode</td>
+                        <td>@employee.FullName</td>
+                        <td>@employee.PositionName</td>
+                        <td>
+                            @if (employee.ShiftNames.Count == 0)
+                            {
+                                <span class="text-muted">Chưa phân ca</span>
+                            }
+                            else
+                            {
+                                @foreach (var shiftName in employee.ShiftNames)
+                                {
+                                    <span class="badge bg-light text-dark border me-1">@shiftName</span>
+                                }
+                            }
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Assign" asp-route-id="@employee.EmployeeId" class="btn btn-sm btn-outline-primary">
+                                Phân ca
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

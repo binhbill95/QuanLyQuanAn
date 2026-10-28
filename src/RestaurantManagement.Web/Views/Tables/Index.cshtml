@@ -1,0 +1,86 @@
+@model DiningTablesIndexViewModel
+@{
+    ViewData["Title"] = "Bàn ăn";
+    var statusStyles = new Dictionary<string, string>
+    {
+        ["Trống"] = "bg-success",
+        ["Có khách"] = "bg-primary",
+        ["Đang đợi món"] = "bg-warning text-dark",
+        ["Món đã xong"] = "bg-info text-dark",
+        ["Ngừng sử dụng"] = "bg-secondary",
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Bàn ăn</h1>
+        <p class="text-muted mb-0">Sơ đồ bàn theo khu vực và trạng thái hiện tại.</p>
+    </div>
+    @if (Model.CanManage)
+    {
+        <div class="d-flex gap-2">
+            <a asp-action="Areas" class="btn btn-outline-primary">Quản lý khu vực</a>
+            <a asp-action="Create" class="btn btn-primary">+ Thêm bàn</a>
+        </div>
+    }
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (Model.Tables.Count == 0)
+{
+    <div class="alert alert-light border text-center text-muted">Chưa có bàn ăn nào.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var table in Model.Tables)
+        {
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                <article class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <h2 class="h5 mb-0">@table.TableNumber</h2>
+                            <span class="badge @(statusStyles.TryGetValue(table.StatusName, out var style) ? style : "bg-secondary")">
+                                @table.StatusName
+                            </span>
+                        </div>
+                        <div class="small text-muted mt-2">@(table.AreaName ?? "Chưa phân khu")</div>
+                        <div class="small">@table.MaxSeats chỗ</div>
+                    </div>
+                    @if (Model.CanManage)
+                    {
+                        <div class="card-footer bg-white d-flex flex-wrap gap-2">
+                            <a asp-action="Edit" asp-route-id="@table.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                            @if (table.IsActive)
+                            {
+                                <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
+                                    <input type="hidden" name="isActive" value="false" />
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Ngừng</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
+                                    <input type="hidden" name="isActive" value="true" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Kích hoạt</button>
+                                </form>
+                            }
+                            <form asp-action="Delete" asp-route-id="@table.Id" method="post"
+                                  onsubmit="return confirm('Xóa mềm bàn này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </div>
+                    }
+                </article>
+            </div>
+        }
+    </div>
+}

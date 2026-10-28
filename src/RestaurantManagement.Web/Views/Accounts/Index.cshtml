@@ -1,0 +1,145 @@
+@model AccountIndexViewModel
+@{
+    ViewData["Title"] = "Tài khoản";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Tài khoản</h1>
+        <p class="text-muted mb-0">Tạo tài khoản cho nhân viên, đổi vai trò, đặt lại mật khẩu, khóa/mở</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Tạo tài khoản</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <label class="form-label small" for="keyword">Tìm kiếm</label>
+        <input id="keyword" name="keyword" value="@Model.Keyword" class="form-control"
+               placeholder="Tên đăng nhập, mã hoặc họ tên nhân viên" />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label small" for="roleId">Vai trò</label>
+        <select id="roleId" name="roleId" class="form-select">
+            <option value="">— Tất cả —</option>
+            @foreach (var role in Model.Roles)
+            {
+                <option value="@role.Id" selected="@(Model.RoleId == role.Id)">@role.Name (@role.Code)</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label small" for="isActive">Trạng thái</label>
+        <select id="isActive" name="isActive" class="form-select">
+            <option value="">— Tất cả —</option>
+            <option value="true" selected="@(Model.IsActive == true)">Đang hoạt động</option>
+            <option value="false" selected="@(Model.IsActive == false)">Đã khóa</option>
+        </select>
+    </div>
+
+    <div class="col-md-3 d-flex align-items-end gap-2">
+        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Tên đăng nhập</th>
+                <th>Nhân viên</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Đăng nhập cuối</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Accounts.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">Không tìm thấy tài khoản nào.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var account in Model.Accounts)
+                {
+                    var isAdminAccount = string.Equals(account.RoleCode, "ADMIN", StringComparison.OrdinalIgnoreCase);
+                    var isCurrentUser = account.UserId == Model.CurrentUserId;
+
+                    <tr>
+                        <td class="fw-semibold">@account.Username</td>
+                        <td>
+                            @if (account.EmployeeId.HasValue)
+                            {
+                                <div>@account.EmployeeName</div>
+                                <div class="text-muted small">@account.EmployeeCode</div>
+                            }
+                            else
+                            {
+                                <span class="text-muted">— Không gắn hồ sơ —</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">@account.RoleName</span>
+                            <div class="text-muted small">@account.RoleCode</div>
+                        </td>
+                        <td>
+                            @if (account.IsActive)
+                            {
+                                <span class="badge bg-success">Đang hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Đã khóa</span>
+                            }
+                        </td>
+                        <td>
+                            @(account.LastLoginAt.HasValue
+                                ? DateTime.SpecifyKind(account.LastLoginAt.Value, DateTimeKind.Utc).ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                : "Chưa đăng nhập")
+                        </td>
+                        <td class="text-end text-nowrap">
+                            @if (isAdminAccount)
+                            {
+                                <span class="text-muted small">Tài khoản hệ thống</span>
+                            }
+                            else if (isCurrentUser)
+                            {
+                                <span class="text-muted small">Tài khoản của bạn</span>
+                            }
+                            else
+                            {
+                                <a asp-action="Edit" asp-route-id="@account.UserId"
+                                   class="btn btn-sm btn-outline-primary">Sửa vai trò</a>
+
+                                <a asp-action="ResetPassword" asp-route-id="@account.UserId"
+                                   class="btn btn-sm btn-outline-secondary">Đặt lại mật khẩu</a>
+
+                                <form asp-action="ToggleActive" asp-route-id="@account.UserId" method="post" class="d-inline">
+                                    <input type="hidden" name="isActive" value="@(account.IsActive ? "false" : "true")" />
+                                    <button type="submit" class="btn btn-sm @(account.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                        @(account.IsActive ? "Khóa" : "Mở khóa")
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

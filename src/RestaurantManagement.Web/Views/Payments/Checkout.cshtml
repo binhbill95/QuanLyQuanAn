@@ -1,0 +1,154 @@
+@model PaymentCheckoutViewModel
+@{
+    ViewData["Title"] = "Tính tiền";
+    var currentTotal = Model.Invoice.Subtotal - Model.Form.DiscountAmount;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-1">Tính tiền hóa đơn @Model.Invoice.InvoiceCode</h1>
+        <div class="text-muted">
+            Bàn: @string.Join(", ", Model.Invoice.Tables.Select(table => table.Number))
+            · @Model.Invoice.CustomerCount khách
+            · Mở lúc @Model.Invoice.OpenedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+        </div>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Danh sách hóa đơn</a>
+</div>
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (Model.Invoice.UnfinishedItemCount > 0)
+{
+    <div class="alert alert-warning">
+        Hóa đơn còn @Model.Invoice.UnfinishedItemCount món đang chờ hoặc đang chế biến.
+        Chỉ tiếp tục nếu khách đã xác nhận thanh toán.
+    </div>
+}
+
+<div class="card mb-4">
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Món</th>
+                    <th>Ghi chú</th>
+                    <th class="text-end">Số lượng</th>
+                    <th class="text-end">Đơn giá</th>
+                    <th class="text-end">Thành tiền</th>
+                    <th>Trạng thái</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Invoice.Items)
+                {
+                    var statusLabel = item.Status switch
+                    {
+                        0 => "Đang chờ",
+                        1 => "Đang chế biến",
+                        2 => "Hoàn thành",
+                        3 => "Đã hủy",
+                        _ => "Không xác định",
+                    };
+                    <tr class="@(item.Status == 3 ? "text-muted" : "")">
+                        <td>
+                            <span class="fw-semibold">@item.ItemName</span>
+                            <div class="small text-muted">@item.ItemCode</div>
+                        </td>
+                        <td>@(item.Note ?? "—")</td>
+                        <td class="text-end">@item.Quantity</td>
+                        <td class="text-end">@item.UnitPrice.ToString("N0") đ</td>
+                        <td class="text-end">@((item.Quantity * item.UnitPrice).ToString("N0")) đ</td>
+                        <td>@statusLabel</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row justify-content-end">
+    <div class="col-lg-6 col-xl-5">
+        <form asp-action="Pay" method="post" class="card">
+            <div class="card-body">
+                <input type="hidden" name="InvoiceId" value="@Model.Form.InvoiceId" />
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tạm tính món chưa hủy</span>
+                    <strong>@Model.Invoice.Subtotal.ToString("N0") đ</strong>
+                </div>
+                @if (Model.CanApplyDiscount)
+                {
+                    <div class="mb-3">
+                        <label for="DiscountAmount" class="form-label">Giảm giá (chỉ quản lý)</label>
+                        <div class="input-group">
+                            <input id="DiscountAmount" name="DiscountAmount" type="number" min="0"
+                                   max="@Model.Invoice.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   step="0.01" value="@Model.Form.DiscountAmount.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   class="form-control" />
+                            <span class="input-group-text">đ</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" name="DiscountAmount" value="0" />
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Giảm giá</span>
+                        <span>0 đ</span>
+                    </div>
+                }
+                <div class="d-flex justify-content-between border-top pt-3 mb-3">
+                    <span class="fw-semibold">Khách cần thanh toán</span>
+                    <strong id="payment-total"
+                            data-subtotal="@Model.Invoice.Subtotal.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                            class="fs-5 text-primary">@currentTotal.ToString("N0") đ</strong>
+                </div>
+                <div class="mb-3">
+                    <label for="Method" class="form-label">Phương thức</label>
+                    <select id="Method" name="Method" class="form-select" required>
+                        <option value="0">Tiền mặt</option>
+                        <option value="1">Chuyển khoản</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="Note" class="form-label">Ghi chú thanh toán</label>
+                    <input id="Note" name="Note" maxlength="255" class="form-control" value="@Model.Form.Note" />
+                </div>
+                @if (Model.Invoice.UnfinishedItemCount > 0)
+                {
+                    <div class="form-check mb-3">
+                        <input id="ConfirmUnfinishedItems" name="ConfirmUnfinishedItems" type="checkbox"
+                               value="true" class="form-check-input" required />
+                        <label for="ConfirmUnfinishedItems" class="form-check-label">
+                            Tôi xác nhận vẫn thanh toán khi còn món chưa hoàn thành
+                        </label>
+                    </div>
+                }
+                <button type="submit" class="btn btn-success w-100"
+                        onclick="return confirm('Xác nhận thanh toán và đóng toàn bộ bàn của hóa đơn này?');">
+                    Xác nhận thanh toán và in hóa đơn
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.CanApplyDiscount)
+{
+    <script>
+        (() => {
+            const input = document.getElementById("DiscountAmount");
+            const total = document.getElementById("payment-total");
+            const subtotal = Number(total.dataset.subtotal);
+            const formatter = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+
+            input.addEventListener("input", () => {
+                const discount = Math.min(subtotal, Math.max(0, Number(input.value) || 0));
+                total.textContent = `${formatter.format(subtotal - discount)} đ`;
+            });
+        })();
+    </script>
+}

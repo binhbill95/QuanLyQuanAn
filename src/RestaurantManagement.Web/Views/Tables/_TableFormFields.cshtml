@@ -1,0 +1,32 @@
+@model DiningTableFormViewModel
+
+<div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+<div class="row g-3">
+    <div class="col-md-4">
+        <label asp-for="TableNumber" class="form-label"></label>
+        <input asp-for="TableNumber" class="form-control text-uppercase" placeholder="B01" />
+        <span asp-validation-for="TableNumber" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="AreaId" class="form-label"></label>
+        <select asp-for="AreaId" class="form-select">
+            <option value="">-- Chưa phân khu --</option>
+            @foreach (var area in Model.Areas)
+            {
+                <option value="@area.Id">@area.Name</option>
+            }
+        </select>
+        <span asp-validation-for="AreaId" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
+        <label asp-for="MaxSeats" class="form-label"></label>
+        <input asp-for="MaxSeats" type="number" min="1" max="100" class="form-control" />
+        <span asp-validation-for="MaxSeats" class="text-danger"></span>
+    </div>
+    <div class="col-12">
+        <div class="form-check">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label asp-for="IsActive" class="form-check-label"></label>
+        </div>
+    </div>
+</div>

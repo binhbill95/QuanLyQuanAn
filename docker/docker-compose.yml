@@ -1,0 +1,44 @@
+# =====================================================================================
+# Restaurant Management System — SQL Server 2022
+# Chạy:  cd docker && docker compose up -d --build
+# Logs:  docker compose logs -f sqlserver
+# =====================================================================================
+
+services:
+  sqlserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: restaurant-sqlserver:2022
+    container_name: restaurant-sqlserver
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in docker/.env}"
+      MSSQL_PID: "Developer"
+      TZ: "Asia/Ho_Chi_Minh"
+
+    ports:
+      - "${MSSQL_PORT:-1433}:1433"
+
+    volumes:
+      - mssql-data:/var/opt/mssql
+      - ../database:/docker-entrypoint-initdb.d:ro
+      - ../database/backup:/var/opt/mssql/backup
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "SQLCMD=/opt/mssql-tools18/bin/sqlcmd; [ -x \"$$SQLCMD\" ] || SQLCMD=/opt/mssql-tools/bin/sqlcmd; \"$$SQLCMD\" -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' >/dev/null 2>&1 || exit 1",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+    restart: unless-stopped
+
+volumes:
+  mssql-data:
+    name: restaurant-mssql-data

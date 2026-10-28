@@ -1,0 +1,58 @@
+@model IReadOnlyList<AreaDto>
+@{
+    ViewData["Title"] = "Khu vực";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Khu vực bàn</h1>
+        <p class="text-muted mb-0">Sắp xếp khu vực và quản lý trạng thái sử dụng.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">Bàn ăn</a>
+        <a asp-action="CreateArea" class="btn btn-primary">+ Thêm khu vực</a>
+    </div>
+</div>
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr><th>Tên khu vực</th><th>Thứ tự</th><th>Số bàn</th><th>Trạng thái</th><th class="text-end">Thao tác</th></tr>
+        </thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr><td colspan="5" class="text-center text-muted py-4">Chưa có khu vực nào.</td></tr>
+        }
+        else
+        {
+            @foreach (var area in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@area.Name</td>
+                    <td>@area.DisplayOrder</td>
+                    <td>@area.TableCount</td>
+                    <td>
+                        <span class="badge @(area.IsActive ? "bg-success" : "bg-secondary")">
+                            @(area.IsActive ? "Đang sử dụng" : "Ngừng")
+                        </span>
+                    </td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="EditArea" asp-route-id="@area.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                        <form asp-action="DeleteArea" asp-route-id="@area.Id" method="post" class="d-inline"
+                              onsubmit="return confirm('Xóa mềm khu vực này?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>

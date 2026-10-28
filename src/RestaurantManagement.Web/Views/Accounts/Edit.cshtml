@@ -1,0 +1,59 @@
+@model AccountEditViewModel
+@{
+    ViewData["Title"] = "Sửa vai trò";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Sửa vai trò</h1>
+        <p class="text-muted mb-0">Thay đổi vai trò sẽ buộc người dùng đăng nhập lại</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Danh sách</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row mb-4">
+            <dt class="col-sm-3">Tên đăng nhập</dt>
+            <dd class="col-sm-9 fw-semibold">@Model.Username</dd>
+
+            <dt class="col-sm-3">Nhân viên</dt>
+            <dd class="col-sm-9">
+                @(Model.EmployeeName is null
+                    ? "— Không gắn hồ sơ —"
+                    : $"{Model.EmployeeCode} – {Model.EmployeeName}")
+            </dd>
+
+            <dt class="col-sm-3">Vai trò hiện tại</dt>
+            <dd class="col-sm-9"><span class="badge bg-secondary">@Model.RoleCode</span></dd>
+        </dl>
+
+        <form asp-action="Edit" asp-route-id="@Model.UserId" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label asp-for="RoleId" class="form-label"></label>
+                    <select asp-for="RoleId" class="form-select">
+                        @foreach (var role in Model.Roles)
+                        {
+                            <option value="@role.Id" selected="@(Model.RoleId == role.Id)">
+                                @role.Name (@role.Code)
+                            </option>
+                        }
+                    </select>
+                    <span asp-validation-for="RoleId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-7">
+                    <button type="submit" class="btn btn-primary">Lưu vai trò</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

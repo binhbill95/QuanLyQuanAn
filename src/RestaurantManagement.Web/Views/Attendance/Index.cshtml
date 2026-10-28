@@ -1,0 +1,156 @@
+@model AttendanceIndexViewModel
+@{
+    ViewData["Title"] = "Chấm công";
+    var isToday = Model.Date == DateOnly.FromDateTime(DateTime.Now);
+    var previousDay = Model.Date.AddDays(-1).ToString("yyyy-MM-dd");
+    var nextDay = Model.Date.AddDays(1).ToString("yyyy-MM-dd");
+}
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="h3 mb-0">Chấm công</h1>
+        <p class="text-muted mb-0">Ngày @Model.Date.ToString("dd/MM/yyyy")</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" asp-route-date="@previousDay" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary btn-sm">← Hôm trước</a>
+        <a asp-action="Index" asp-route-date="@nextDay" asp-route-employeeId="@Model.EmployeeId" class="btn btn-outline-secondary btn-sm">Hôm sau →</a>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (Model.Notice is not null)
+{
+    <div class="alert alert-warning">@Model.Notice</div>
+}
+
+<form method="get" asp-action="Index" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label small" for="date">Ngày</label>
+        <input type="date" id="date" name="date" class="form-control" value="@Model.Date.ToString("yyyy-MM-dd")" />
+    </div>
+
+    @if (Model.IsManagement)
+    {
+        <div class="col-md-4">
+            <label class="form-label small" for="employeeId">Nhân viên</label>
+            <select id="employeeId" name="employeeId" class="form-select">
+                <option value="">— Tất cả nhân viên —</option>
+                @foreach (var employee in Model.Employees)
+                {
+                    <option value="@employee.Id" selected="@(Model.EmployeeId == employee.Id)">
+                        @employee.Code – @employee.FullName
+                    </option>
+                }
+            </select>
+        </div>
+    }
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit" class="btn btn-outline-primary w-100">Xem</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Nhân viên</th>
+                <th>Ca</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Số giờ</th>
+                <th>Trạng thái</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Rows.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Không có ca làm trong ngày.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var row in Model.Rows)
+                {
+                    var isOwnRow = Model.CurrentEmployeeId.HasValue && row.EmployeeId == Model.CurrentEmployeeId.Value;
+
+                    <tr>
+                        <td>
+                            <div>@row.EmployeeName</div>
+                            <div class="text-muted small">@row.EmployeeCode</div>
+                        </td>
+                        <td>
+                            <div>@row.ShiftName</div>
+                            <div class="text-muted small">@row.StartTime.ToString("HH:mm") – @row.EndTime.ToString("HH:mm")</div>
+                        </td>
+                        <td>
+                            @(row.CheckInAt.HasValue
+                                ? DateTime.SpecifyKind(row.CheckInAt.Value, DateTimeKind.Utc).ToLocalTime().ToString("HH:mm")
+                                : "—")
+                        </td>
+                        <td>
+                            @(row.CheckOutAt.HasValue
+                                ? DateTime.SpecifyKind(row.CheckOutAt.Value, DateTimeKind.Utc).ToLocalTime().ToString("HH:mm")
+                                : "—")
+                        </td>
+                        <td>
+                            @(row.WorkedMinutes.HasValue
+                                ? (row.WorkedMinutes.Value / 60.0).ToString("0.0") + " giờ"
+                                : "—")
+                        </td>
+                        <td>
+                            @if (row.Status is null)
+                            {
+                                <span class="badge bg-secondary">Chưa chấm công</span>
+                            }
+                            else if (row.Status == 1)
+                            {
+                                <span class="badge bg-success">Đã duyệt</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            @if (isOwnRow && isToday && row.AttendanceId is null)
+                            {
+                                <form asp-action="CheckIn" asp-route-scheduleId="@row.ScheduleId" method="post" class="d-inline">
+                                    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+                                    <button type="submit" class="btn btn-sm btn-success">Check-in</button>
+                                </form>
+                            }
+
+                            @if (isOwnRow && isToday && row.AttendanceId.HasValue && row.CheckOutAt is null)
+                            {
+                                <form asp-action="CheckOut" asp-route-attendanceId="@row.AttendanceId" method="post" class="d-inline">
+                                    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+                                    <button type="submit" class="btn btn-sm btn-warning">Check-out</button>
+                                </form>
+                            }
+
+                            @if (Model.IsManagement && row.Status == 0 && row.AttendanceId.HasValue)
+                            {
+                                <form asp-action="Approve" asp-route-attendanceId="@row.AttendanceId" method="post" class="d-inline">
+                                    <input type="hidden" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" />
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Duyệt</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

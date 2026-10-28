@@ -1,0 +1,168 @@
+@model MenuIndexViewModel
+@{
+    ViewData["Title"] = "Thực đơn";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Thực đơn</h1>
+        <p class="text-muted mb-0">Danh sách món theo nhóm, giá bán và tình trạng còn món.</p>
+    </div>
+    @if (Model.CanManage)
+    {
+        <div class="d-flex gap-2">
+            <a asp-controller="Categories" asp-action="Index" class="btn btn-outline-primary">Quản lý nhóm món</a>
+            <a asp-action="Create" class="btn btn-primary">+ Thêm món</a>
+            <a asp-action="Index" asp-route-showDeleted="@(!Model.ShowDeleted)" class="btn btn-outline-secondary">
+                @(Model.ShowDeleted ? "Xem thực đơn" : "Món đã xóa")
+            </a>
+        </div>
+    }
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<form method="get" class="card card-body mb-3">
+    <div class="row g-2 align-items-end">
+        @if (Model.ShowDeleted)
+        {
+            <input type="hidden" name="showDeleted" value="true" />
+        }
+        <div class="col-md-5">
+            <label for="keyword" class="form-label">Tìm món</label>
+            <input id="keyword" name="keyword" value="@Model.Keyword" class="form-control" placeholder="Tên hoặc mã món" />
+        </div>
+        <div class="col-md-4">
+            <label for="categoryId" class="form-label">Nhóm món</label>
+            <select id="categoryId" name="categoryId" class="form-select">
+                <option value="">Tất cả nhóm</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">
+                        @category.Name @(category.IsActive ? "" : "(ngừng)")
+                    </option>
+                }
+            </select>
+        </div>
+        @if (Model.CanToggleAvailability)
+        {
+            <div class="col-md-2">
+                <label for="isAvailable" class="form-label">Tình trạng</label>
+                <select id="isAvailable" name="isAvailable" class="form-select">
+                    <option value="">Tất cả</option>
+                    <option value="true" selected="@(Model.IsAvailable == true)">Còn món</option>
+                    <option value="false" selected="@(Model.IsAvailable == false)">Hết món</option>
+                </select>
+            </div>
+        }
+        <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-outline-primary">Lọc</button>
+        </div>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="alert alert-light border text-center text-muted">
+        @(Model.ShowDeleted ? "Không tìm thấy món đã xóa." : "Không tìm thấy món phù hợp.")
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var item in Model.Items)
+        {
+            <div class="col-sm-6 col-lg-4 col-xl-3">
+                <article class="card h-100">
+                    @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                    {
+                        <img src="@item.ImageUrl" class="card-img-top" alt="@item.Name" loading="lazy"
+                             style="height: 170px; object-fit: cover;" />
+                    }
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <h2 class="h6 card-title mb-1">@item.Name</h2>
+                            @if (Model.ShowDeleted)
+                            {
+                                <span class="badge bg-danger">Đã xóa</span>
+                            }
+                            else if (item.IsAvailable)
+                            {
+                                <span class="badge bg-success">Còn món</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Hết món</span>
+                            }
+                        </div>
+                        <div class="small text-muted mb-2">
+                            @item.CategoryName · @item.Code
+                            @if (Model.ShowDeleted)
+                            {
+                                <span class="badge bg-info text-dark">Chọn nhóm khi khôi phục</span>
+                            }
+                            else if (!item.CategoryIsActive)
+                            {
+                                <span class="badge bg-warning text-dark">Nhóm ngừng</span>
+                            }
+                        </div>
+                        <div class="fw-semibold text-primary mb-2">@item.Price.ToString("N0") đ <span class="small text-muted">/@(item.Unit ?? "phần")</span></div>
+                        @if (!string.IsNullOrWhiteSpace(item.Description))
+                        {
+                            <p class="small text-muted flex-grow-1 mb-2">@item.Description</p>
+                        }
+                        @if (Model.CanManage || Model.CanToggleAvailability)
+                        {
+                            <div class="d-flex flex-wrap gap-2 mt-auto pt-2">
+                                @if (Model.ShowDeleted && Model.CanManage)
+                                {
+                                    <form asp-action="Restore" method="post" class="d-flex flex-wrap gap-2 w-100">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <select name="categoryId" class="form-select form-select-sm" required
+                                                aria-label="Nhóm món khôi phục cho @item.Name">
+                                            <option value="">-- Chọn nhóm đang hoạt động --</option>
+                                            @foreach (var category in Model.Categories.Where(category => category.IsActive))
+                                            {
+                                                <option value="@category.Id" selected="@(category.Id == item.CategoryId)">
+                                                    @category.Name
+                                                </option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-success"
+                                                disabled="@(!Model.Categories.Any(category => category.IsActive))">
+                                            Khôi phục
+                                        </button>
+                                    </form>
+                                }
+                                else if (Model.CanManage)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post"
+                                          onsubmit="return confirm('Xóa món này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                }
+                                @if (!Model.ShowDeleted && Model.CanToggleAvailability && item.CategoryIsActive)
+                                {
+                                    <form asp-action="SetAvailable" asp-route-id="@item.Id" method="post">
+                                        <input type="hidden" name="isAvailable" value="@(!item.IsAvailable)" />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                            @(item.IsAvailable ? "Đánh dấu hết" : "Đánh dấu còn")
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+}

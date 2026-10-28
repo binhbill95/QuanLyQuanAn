@@ -1,0 +1,25 @@
+@model ShiftFormViewModel
+@{
+    ViewData["Title"] = "Sửa ca làm";
+}
+
+<h1 class="h3 mb-3">Sửa ca làm</h1>
+
+<div class="card">
+    <div class="card-body">
+        <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <partial name="_FormFields" model="Model" />
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

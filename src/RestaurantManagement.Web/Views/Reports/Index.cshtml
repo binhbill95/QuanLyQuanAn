@@ -1,0 +1,268 @@
+@model ReportsIndexViewModel
+@{
+    ViewData["Title"] = "Báo cáo";
+    var maxRevenue = Model.Dashboard.Revenue.Count == 0 ? 0m : Model.Dashboard.Revenue.Max(row => row.Revenue);
+    var totalRevenue = Model.Dashboard.Revenue.Sum(row => row.Revenue);
+    var totalInvoices = Model.Dashboard.Revenue.Sum(row => row.InvoiceCount);
+    var totalCustomers = Model.Dashboard.Revenue.Sum(row => row.CustomerCount);
+    var totalSalary = Model.Dashboard.Payroll.Sum(row => row.Salary);
+}
+
+<style>
+    @@media print {
+        header, footer, .no-print { display: none !important; }
+        body { background: #fff !important; }
+        .container { max-width: none !important; }
+        .card { break-inside: avoid; box-shadow: none !important; }
+    }
+
+    .report-bar { min-width: 2px; height: 1.25rem; background: var(--bs-primary); }
+    .report-section { scroll-margin-top: 1rem; }
+</style>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Báo cáo</h1>
+        <p class="text-muted mb-0">Doanh thu, lượng khách, món bán và công nhân viên.</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+        <a asp-action="Export"
+           asp-route-Year="@Model.Filter.Year"
+           asp-route-Month="@Model.Filter.Month"
+           asp-route-Quarter="@Model.Filter.Quarter"
+           asp-route-Week="@Model.Filter.Week"
+           asp-route-ShiftId="@Model.Filter.ShiftId"
+           asp-route-EmployeeId="@Model.Filter.EmployeeId"
+           asp-route-TableId="@Model.Filter.TableId"
+           asp-route-MenuItemId="@Model.Filter.MenuItemId"
+           class="btn btn-outline-success">Xuất CSV</a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">In báo cáo</button>
+    </div>
+</div>
+
+<form method="get" class="card mb-4 no-print">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-6 col-md-2">
+                <label for="Year" class="form-label">Năm</label>
+                <input id="Year" name="Year" type="number" min="2000" max="2100"
+                       value="@Model.Filter.Year" class="form-control" required />
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="Month" class="form-label">Tháng</label>
+                <select id="Month" name="Month" class="form-select">
+                    <option value="">Cả năm</option>
+                    @for (var month = 1; month <= 12; month++)
+                    {
+                        <option value="@month" selected="@(Model.Filter.Month == month ? "selected" : null)">@month.ToString("00")</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="Quarter" class="form-label">Quý</label>
+                <select id="Quarter" name="Quarter" class="form-select">
+                    <option value="">Tất cả</option>
+                    @for (var quarter = 1; quarter <= 4; quarter++)
+                    {
+                        <option value="@quarter" selected="@(Model.Filter.Quarter == quarter ? "selected" : null)">Quý @quarter</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="Week" class="form-label">Tuần (báo cáo nhân viên)</label>
+                <select id="Week" name="Week" class="form-select">
+                    <option value="">Cả năm</option>
+                    @for (var week = 1; week <= 53; week++)
+                    {
+                        <option value="@week" selected="@(Model.Filter.Week == week ? "selected" : null)">Tuần @week</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="ShiftId" class="form-label">Ca</label>
+                <select id="ShiftId" name="ShiftId" class="form-select">
+                    <option value="">Tất cả</option>
+                    @foreach (var shift in Model.Shifts)
+                    {
+                        <option value="@shift.Id" selected="@(Model.Filter.ShiftId == shift.Id ? "selected" : null)">@shift.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="EmployeeId" class="form-label">Nhân viên</label>
+                <select id="EmployeeId" name="EmployeeId" class="form-select">
+                    <option value="">Tất cả</option>
+                    @foreach (var employee in Model.Employees)
+                    {
+                        <option value="@employee.Id" selected="@(Model.Filter.EmployeeId == employee.Id ? "selected" : null)">@employee.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="TableId" class="form-label">Bàn</label>
+                <select id="TableId" name="TableId" class="form-select">
+                    <option value="">Tất cả</option>
+                    @foreach (var table in Model.Tables)
+                    {
+                        <option value="@table.Id" selected="@(Model.Filter.TableId == table.Id ? "selected" : null)">@table.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="MenuItemId" class="form-label">Món</label>
+                <select id="MenuItemId" name="MenuItemId" class="form-select">
+                    <option value="">Tất cả</option>
+                    @foreach (var item in Model.MenuItems)
+                    {
+                        <option value="@item.Id" selected="@(Model.Filter.MenuItemId == item.Id ? "selected" : null)">@item.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Lọc báo cáo</button>
+            </div>
+        </div>
+        <div class="form-text mt-2">Báo cáo doanh thu, khách và món dùng kỳ chốt hóa đơn; báo cáo công/lương dùng tháng làm việc và ca đã duyệt.</div>
+    </div>
+</form>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Doanh thu sau giảm giá</div><div class="fs-5 fw-semibold">@totalRevenue.ToString("N0") đ</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Hóa đơn đã thanh toán</div><div class="fs-5 fw-semibold">@totalInvoices</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Khách đã phục vụ</div><div class="fs-5 fw-semibold">@totalCustomers</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><div class="small text-muted">Lương theo ca đã duyệt</div><div class="fs-5 fw-semibold">@totalSalary.ToString("N0") đ</div></div></div></div>
+</div>
+
+<section class="card mb-4 report-section">
+    <div class="card-header"><h2 class="h5 mb-0">Doanh thu theo tháng</h2></div>
+    <div class="card-body">
+        @if (Model.Dashboard.Revenue.Count == 0)
+        {
+            <p class="text-muted mb-0">Chưa có hóa đơn đã thanh toán trong kỳ.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle">
+                    <thead><tr><th>Tháng</th><th class="text-end">Hóa đơn</th><th class="text-end">Khách</th><th>Doanh thu</th><th class="text-end">Số tiền</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in Model.Dashboard.Revenue)
+                        {
+                            var width = maxRevenue == 0 ? 0 : (double)(row.Revenue / maxRevenue * 100);
+                            <tr>
+                                <td>@row.Month.ToString("00")/@row.Year</td>
+                                <td class="text-end">@row.InvoiceCount</td>
+                                <td class="text-end">@row.CustomerCount</td>
+                                <td style="width: 40%"><div class="report-bar rounded" style="width: @width.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%"></div></td>
+                                <td class="text-end fw-semibold">@row.Revenue.ToString("N0") đ</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <section class="card h-100 report-section">
+            <div class="card-header"><h2 class="h5 mb-0">Khách theo ca</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Kỳ</th><th>Ca</th><th class="text-end">Hóa đơn</th><th class="text-end">Khách</th></tr></thead>
+                    <tbody>
+                    @if (Model.Dashboard.CustomersByShift.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+                    }
+                    @foreach (var row in Model.Dashboard.CustomersByShift)
+                    {
+                        <tr><td>@row.Month.ToString("00")/@row.Year</td><td>@row.ShiftName</td><td class="text-end">@row.InvoiceCount</td><td class="text-end">@row.CustomerCount</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <section class="card h-100 report-section">
+            <div class="card-header"><h2 class="h5 mb-0">Khách theo nhân viên / tuần</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Năm / tuần</th><th>Nhân viên</th><th class="text-end">Hóa đơn</th><th class="text-end">Khách</th></tr></thead>
+                    <tbody>
+                    @if (Model.Dashboard.CustomersByEmployee.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+                    }
+                    @foreach (var row in Model.Dashboard.CustomersByEmployee)
+                    {
+                        <tr><td>@row.Year / W@(row.Week.ToString("00"))</td><td>@row.EmployeeCode · @row.FullName</td><td class="text-end">@row.InvoiceCount</td><td class="text-end">@row.CustomerCount</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <section class="card h-100 report-section">
+            <div class="card-header"><h2 class="h5 mb-0">Khách theo bàn</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Kỳ</th><th>Bàn</th><th class="text-end">Hóa đơn</th><th class="text-end">Khách</th></tr></thead>
+                    <tbody>
+                    @if (Model.Dashboard.CustomersByTable.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+                    }
+                    @foreach (var row in Model.Dashboard.CustomersByTable)
+                    {
+                        <tr><td>@row.Month.ToString("00")/@row.Year</td><td>@row.TableNumber</td><td class="text-end">@row.InvoiceCount</td><td class="text-end">@row.CustomerCount</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-6">
+        <section class="card h-100 report-section">
+            <div class="card-header"><h2 class="h5 mb-0">Món đã bán</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Món</th><th>Nhóm</th><th class="text-end">SL</th><th class="text-end">Doanh thu</th></tr></thead>
+                    <tbody>
+                    @if (Model.Dashboard.ItemSales.Count == 0)
+                    {
+                        <tr><td colspan="4" class="text-center text-muted">Chưa có dữ liệu.</td></tr>
+                    }
+                    @foreach (var row in Model.Dashboard.ItemSales)
+                    {
+                        <tr><td>@row.ItemCode · @row.ItemName</td><td>@row.CategoryName</td><td class="text-end">@row.Quantity</td><td class="text-end">@row.Revenue.ToString("N0") đ</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="col-12">
+        <section class="card report-section">
+            <div class="card-header"><h2 class="h5 mb-0">Công và lương theo ca đã duyệt</h2></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Tháng</th><th>Mã NV</th><th>Nhân viên</th><th>Vị trí</th><th class="text-end">Ca duyệt</th><th class="text-end">Đơn giá ca</th><th class="text-end">Lương</th></tr></thead>
+                    <tbody>
+                    @if (Model.Dashboard.Payroll.Count == 0)
+                    {
+                        <tr><td colspan="7" class="text-center text-muted">Chưa có chấm công đã duyệt trong kỳ.</td></tr>
+                    }
+                    @foreach (var row in Model.Dashboard.Payroll)
+                    {
+                        <tr><td>@row.Month.ToString("00")/@row.Year</td><td>@row.EmployeeCode</td><td>@row.FullName</td><td>@row.PositionName</td><td class="text-end">@row.ApprovedShiftCount</td><td class="text-end">@row.ShiftRate.ToString("N0") đ</td><td class="text-end fw-semibold">@row.Salary.ToString("N0") đ</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
