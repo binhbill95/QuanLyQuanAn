@@ -119,6 +119,7 @@ src/        Solution ASP.NET Core MVC và các project Clean Architecture
 - `docs/02_BusinessRequirements.md` — yêu cầu nghiệp vụ.
 - `docs/03_UserRoles.md` — vai trò và phạm vi quyền.
 - `docs/04_UseCases.md` — ca sử dụng.
+- `docs/sequence.md` — biểu đồ tuần tự các luồng nghiệp vụ chính.
 - `docs/11_DatabaseSchemaDesign.md` — thiết kế cơ sở dữ liệu.
 - `docs/09_DevelopmentRoadmap.md` — roadmap.
 - `database/README.md` — thứ tự và nội dung SQL scripts.
