@@ -19,7 +19,7 @@ services:
       TZ: "Asia/Ho_Chi_Minh"
 
     ports:
-      - "${MSSQL_PORT:-1433}:1433"
+      - "127.0.0.1:${MSSQL_PORT:-1433}:1433"
 
     volumes:
       - mssql-data:/var/opt/mssql

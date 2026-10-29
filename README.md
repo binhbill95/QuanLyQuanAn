@@ -30,6 +30,8 @@ Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điể
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) hoặc Docker Engine với Docker Compose
 - Tối thiểu 2 GB RAM khả dụng cho SQL Server container
 
+> Đây là cấu hình demo cục bộ để giảng viên chạy và kiểm tra đồ án, không phải cấu hình triển khai production. SQL Server chỉ được bind vào `127.0.0.1`; không đổi thành `0.0.0.0` hoặc mở cổng 1433 ra Internet. Seed có sẵn tài khoản demo với mật khẩu công khai trong repo; chỉ dùng dữ liệu giả lập, không nhập dữ liệu thật.
+
 ## Chạy lần đầu
 
 Các lệnh sau dùng PowerShell từ thư mục gốc của repo.
@@ -87,7 +89,7 @@ Database seed sẵn các tài khoản:
 | `admin` | `Admin@123` | Quản trị hệ thống |
 | `manager` | `Admin@123` | Quản lý quán |
 
-Đây là thông tin đăng nhập **chỉ dành cho database demo cục bộ**. Đổi mật khẩu sau khi đăng nhập; không dùng các tài khoản này cho môi trường triển khai thật.
+Đây là thông tin đăng nhập **chỉ dành cho database demo cục bộ**. Đổi mật khẩu sau khi đăng nhập; không dùng các tài khoản này cho môi trường triển khai thật. Script seed tạo lại các tài khoản demo khi khởi tạo database mới.
 
 ## Gợi ý kiểm tra khi chấm đồ án
 
@@ -130,5 +132,7 @@ src/        Solution ASP.NET Core MVC và các project Clean Architecture
 
 - Repo không chứa file `.env`, mật khẩu SQL cá nhân, backup database `.bak` hoặc PDF đề bài.
 - `database/02_seed.sql` chứa dữ liệu demo. Khi chạy thử, database có thông tin tài khoản mẫu và dữ liệu nghiệp vụ; không đưa dữ liệu cá nhân/thật vào môi trường công khai.
+- Cổng SQL Server trong Docker Compose chỉ mở trên máy local (`127.0.0.1`); cấu hình và tài khoản trong repo dành cho demo, không phải baseline production.
+- Chi tiết đánh giá phạm vi và các rủi ro còn lại: `docs/24_SecurityReview_2026-10-29.md`.
 - Script SQL là nguồn quản lý schema hiện tại; dự án chưa sử dụng EF Core Migrations.
 - Backup và hướng dẫn backup/restore xem `database/backup/README.txt` và `docker/README.md`.

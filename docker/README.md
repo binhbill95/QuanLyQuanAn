@@ -21,6 +21,8 @@ docker compose logs -f sqlserver
 
 Lần chạy đầu tiên sẽ tự tạo database + seed + view + trigger. Các lần sau **bỏ qua** init để không ghi đè dữ liệu.
 
+> Compose chỉ bind cổng SQL Server vào `127.0.0.1` trên máy demo. Không đổi địa chỉ bind thành `0.0.0.0` hoặc mở cổng 1433 trên router/firewall. Seed chứa tài khoản demo công khai; chỉ dùng database với dữ liệu giả lập, không triển khai cấu hình này cho ứng dụng/dữ liệu production.
+
 ## Kiểm tra
 
 ```bash
@@ -62,6 +64,6 @@ File `.bak` nằm ở `../database/backup/` trên host.
 
 - Cần ≥ 2 GB RAM cho container.
 - `docker compose` yêu cầu `MSSQL_SA_PASSWORD` trong `.env`; không commit `.env`.
-- Nếu cổng 1433 bận, đổi `MSSQL_PORT` trong `.env` (ví dụ 14330) và cập nhật connection string.
+- Nếu cổng local 1433 bận, đổi `MSSQL_PORT` trong `.env` (ví dụ 14330) và cập nhật connection string. Cổng vẫn chỉ bind vào `127.0.0.1`.
 - Image SQL Server không có cơ chế init chuẩn như MySQL/Postgres — `entrypoint.sh` trong repo này xử lý việc đó.
 - Máy ARM (Apple Silicon): thêm `platform: linux/amd64` cho service.

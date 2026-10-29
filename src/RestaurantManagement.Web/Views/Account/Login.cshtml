@@ -1,4 +1,5 @@
 @model LoginViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @{
     ViewData["Title"] = "Đăng nhập";
 }
@@ -38,12 +39,15 @@
                     <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
                 </form>
 
-                <hr />
-                <div class="small text-muted">
-                    <div class="mb-1">Tài khoản mẫu (mật khẩu <code>Admin@123</code>):</div>
-                    <div><code>admin</code> — quản trị hệ thống</div>
-                    <div><code>manager</code> — quản lý nhà hàng</div>
-                </div>
+                @if (HostEnvironment.IsDevelopment())
+                {
+                    <hr />
+                    <div class="small text-muted">
+                        <div class="mb-1">Tài khoản demo cục bộ (mật khẩu <code>Admin@123</code>):</div>
+                        <div><code>admin</code> — quản trị hệ thống</div>
+                        <div><code>manager</code> — quản lý nhà hàng</div>
+                    </div>
+                }
             </div>
         </div>
     </div>
