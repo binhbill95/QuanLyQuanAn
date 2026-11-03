@@ -10,6 +10,7 @@
 | Phase 6 | Order Processing | ✅ 2026-10-28 |
 | Phase 7 | Payment | ✅ 2026-10-28 |
 | Phase 8 | Reporting | ✅ 2026-10-28 |
+| Phase 9 | Kiểm thử nghiệp vụ có hỗ trợ Automation AI | ✅ 2026-10-29 |
 
 ## Ghi chú tiến độ
 
@@ -25,7 +26,8 @@
 | 6 | Mở bàn/hóa đơn, gọi/thêm/đổi/hủy món, hàng đợi bếp FIFO, chuyển/gộp bàn và hóa đơn | `19_ImplementationLog_2026-10-28_Phase6.md` |
 | 7 | Danh sách hóa đơn chờ thanh toán, xác nhận món chưa xong, giảm giá theo quyền, tiền mặt/chuyển khoản, đóng hóa đơn, giải phóng bàn và in hóa đơn | `20_ImplementationLog_2026-10-28_Phase7.md` |
 | 8 | Báo cáo doanh thu, khách theo ca/nhân viên/bàn, món bán, ca đã duyệt/lương; bộ lọc, in và xuất CSV | `21_ImplementationLog_2026-10-28_Phase8.md` |
+| 9 | Sửa và kiểm thử sức chứa khi chuyển bàn, quan hệ lịch sử bàn-hóa đơn, số khách theo bàn sau khi gộp, biên nhận, duyệt công và tuần ISO | `25_ImplementationLog_2026-10-29_AutomationAITesting.md` |
 | Audit | Nhật ký thao tác có người thực hiện, lọc/phân trang, lịch sử chuyển/gộp bàn | `22_ImplementationLog_2026-10-28_Audit.md` |
 
 > Thứ tự thực hiện thực tế: Phase 2 (CSDL) làm trước Phase 1 (khởi tạo solution) để scaffold database-first.
-> Phase 5–8 theo thứ tự trong bảng, mỗi phase cập nhật trạng thái và tạo nhật ký riêng.
+> Phase 5–9 theo thứ tự trong bảng, mỗi phase cập nhật trạng thái và tạo nhật ký riêng. Phase 9 đã chạy kiểm thử tích hợp trên database SQL Server riêng; chưa thực hiện kiểm thử E2E giao diện.

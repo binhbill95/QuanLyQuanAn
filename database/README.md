@@ -22,6 +22,10 @@ Thư mục chứa toàn bộ script CSDL cho **SQL Server 2022** (chạy trong D
 
 Xem `../docker/README.md`. Container tự chạy 4 script trên **một lần duy nhất** khi database chưa tồn tại.
 
+## Kiểm thử nghiệp vụ tích hợp
+
+Khi container SQL Server đang chạy, chạy `.\database\run_automation_tests.ps1` từ thư mục gốc repo. Script tạo/cập nhật `RestaurantManagement_AutomationTest` riêng, áp dụng schema/seed/views/triggers rồi chạy test; không kết nối hoặc sửa database demo `RestaurantManagement`.
+
 ## Chạy thủ công
 
 ```bash

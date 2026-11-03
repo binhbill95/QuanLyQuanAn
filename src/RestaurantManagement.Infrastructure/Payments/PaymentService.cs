@@ -100,7 +100,9 @@ public sealed class PaymentService : IPaymentService
                 PaidByEmployeeName = p.PaidByEmployee.FullName,
                 p.Note,
                 Tables = p.Invoice.InvoiceTables
-                    .Where(t => !t.IsDeleted)
+                    .Where(t => !t.IsDeleted &&
+                                (t.ReleasedAt == null ||
+                                 (p.Invoice.ClosedAt.HasValue && t.ReleasedAt >= p.Invoice.ClosedAt.Value)))
                     .OrderByDescending(t => t.IsPrimary)
                     .ThenBy(t => t.Table.TableNumber)
                     .Select(t => new OrderTableDto(t.TableId, t.Table.TableNumber, t.IsPrimary))

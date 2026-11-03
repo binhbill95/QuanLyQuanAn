@@ -21,7 +21,7 @@
 | Báo cáo | Doanh thu, món bán, khách theo ca/nhân viên/bàn và lương |
 | Nhật ký thao tác | Tra cứu thay đổi dữ liệu và lịch sử chuyển/gộp bàn |
 
-Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điểm gọi, không cho gọi món hết hoặc thuộc nhóm đã ngừng, chỉ hủy món còn chờ bếp, kiểm tra sức chứa khi mở/gộp bàn và giải phóng bàn cùng giao dịch thanh toán. Món bị xóa khỏi thực đơn được xóa mềm; quản lý có thể khôi phục món vào nhóm đang hoạt động.
+Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điểm gọi, không cho gọi món hết hoặc thuộc nhóm đã ngừng, chỉ hủy món còn chờ bếp, kiểm tra sức chứa khi mở/chuyển/gộp bàn, giữ số khách theo từng bàn và giải phóng bàn cùng giao dịch thanh toán. Món bị xóa khỏi thực đơn được xóa mềm; quản lý có thể khôi phục món vào nhóm đang hoạt động.
 
 ## Yêu cầu
 
@@ -80,6 +80,16 @@ dotnet run --project .\src\RestaurantManagement.Web
 
 Mở [http://localhost:5010](http://localhost:5010). Có thể kiểm tra kết nối database tại [http://localhost:5010/health/db](http://localhost:5010/health/db).
 
+## Kiểm thử nghiệp vụ có hỗ trợ Automation AI
+
+Khi Docker SQL Server đang chạy, chạy từ thư mục gốc repo:
+
+```powershell
+.\database\run_automation_tests.ps1
+```
+
+Script tạo/cập nhật database riêng `RestaurantManagement_AutomationTest`, nạp schema và seed, sau đó chạy các kiểm thử tích hợp trên SQL Server thật. Các test tự xóa dữ liệu nghiệp vụ do chúng tạo; database demo `RestaurantManagement` không bị dùng hoặc thay đổi. Lệnh `dotnet test` chạy trực tiếp sẽ bỏ qua các test tích hợp nếu chưa cấu hình `RESTAURANT_TEST_CONNECTION_STRING`.
+
 ## Tài khoản demo
 
 Database seed sẵn các tài khoản:
@@ -110,10 +120,10 @@ docker compose --env-file .\docker\.env -f .\docker\docker-compose.yml up -d --b
 ## Cấu trúc repository
 
 ```text
-database/   SQL schema, seed, views, audit triggers và quy tắc nghiệp vụ
+database/   SQL schema, seed, views, audit triggers, quy tắc nghiệp vụ và script kiểm thử
 docker/     Dockerfile, Docker Compose và hướng dẫn SQL Server
 docs/       Yêu cầu, thiết kế CSDL, vai trò và nhật ký triển khai
-src/        Solution ASP.NET Core MVC và các project Clean Architecture
+src/        Solution ASP.NET Core MVC, Clean Architecture và kiểm thử tích hợp
 ```
 
 ## Tài liệu tham khảo trong repo
@@ -124,6 +134,9 @@ src/        Solution ASP.NET Core MVC và các project Clean Architecture
 - `docs/sequence.md` — biểu đồ tuần tự các luồng nghiệp vụ chính.
 - `docs/11_DatabaseSchemaDesign.md` — thiết kế cơ sở dữ liệu.
 - `docs/09_DevelopmentRoadmap.md` — roadmap.
+- `docs/26_DemoPresentation.pptx` — slide trình bày demo trước giảng viên.
+- `docs/26_DemoPresentation.docx` — kịch bản demo định dạng Word để in hoặc chỉnh sửa.
+- `docs/26_DemoPresentation.md` — kịch bản lời dẫn và chuẩn bị buổi demo.
 - `database/README.md` — thứ tự và nội dung SQL scripts.
 - `docker/README.md` — vận hành SQL Server bằng Docker.
 - `src/README.md` — cấu trúc solution và ghi chú kỹ thuật.

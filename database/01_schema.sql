@@ -553,6 +553,7 @@ BEGIN
         [Id]         int          IDENTITY(1,1) NOT NULL,
         [InvoiceId]  int          NOT NULL,
         [TableId]    int          NOT NULL,
+        [CustomerCount] int          NULL,
         [AssignedAt] datetime2(0) NOT NULL CONSTRAINT DF_InvoiceTable_AssignedAt DEFAULT (SYSUTCDATETIME()),
         [ReleasedAt] datetime2(0) NULL,
         [IsPrimary]  bit          NOT NULL CONSTRAINT DF_InvoiceTable_IsPrimary DEFAULT (0),
@@ -566,6 +567,7 @@ BEGIN
         [RowVersion] rowversion   NOT NULL,
 
         CONSTRAINT PK_InvoiceTable PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT CK_InvoiceTable_CustomerCount CHECK ([CustomerCount] IS NULL OR [CustomerCount] > 0),
         CONSTRAINT CK_InvoiceTable_ReleasedAt CHECK ([ReleasedAt] IS NULL OR [ReleasedAt] >= [AssignedAt]),
         CONSTRAINT FK_InvoiceTable_Invoice FOREIGN KEY ([InvoiceId]) REFERENCES dbo.[Invoice] ([Id]),
         CONSTRAINT FK_InvoiceTable_Table FOREIGN KEY ([TableId]) REFERENCES dbo.[DiningTable] ([Id])
@@ -574,6 +576,42 @@ BEGIN
     CREATE UNIQUE INDEX UX_InvoiceTable_ActiveTable ON dbo.[InvoiceTable] ([TableId]) WHERE [ReleasedAt] IS NULL;
     CREATE INDEX IX_InvoiceTable_Invoice ON dbo.[InvoiceTable] ([InvoiceId]);
 END
+GO
+
+IF COL_LENGTH(N'dbo.InvoiceTable', N'CustomerCount') IS NULL
+BEGIN
+    ALTER TABLE dbo.[InvoiceTable] ADD [CustomerCount] int NULL;
+END
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM sys.check_constraints
+    WHERE [name] = N'CK_InvoiceTable_CustomerCount'
+      AND [parent_object_id] = OBJECT_ID(N'dbo.InvoiceTable')
+)
+BEGIN
+    ALTER TABLE dbo.[InvoiceTable]
+        ADD CONSTRAINT CK_InvoiceTable_CustomerCount
+        CHECK ([CustomerCount] IS NULL OR [CustomerCount] > 0);
+END
+GO
+
+;WITH SingleTableInvoices AS
+(
+    SELECT [InvoiceId]
+    FROM dbo.[InvoiceTable]
+    WHERE [IsDeleted] = 0
+    GROUP BY [InvoiceId]
+    HAVING COUNT(*) = 1
+)
+UPDATE it
+SET it.[CustomerCount] = i.[CustomerCount]
+FROM dbo.[InvoiceTable] it
+JOIN SingleTableInvoices s ON s.[InvoiceId] = it.[InvoiceId]
+JOIN dbo.[Invoice] i ON i.[Id] = it.[InvoiceId]
+WHERE it.[CustomerCount] IS NULL;
 GO
 
 IF OBJECT_ID(N'dbo.InvoiceDetail', N'U') IS NULL

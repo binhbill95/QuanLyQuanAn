@@ -405,12 +405,13 @@ erDiagram
 | Id | int IDENTITY | ✖ | PK | |
 | InvoiceId | int | ✖ | FK_`InvoiceTable`_`Invoice` | |
 | TableId | int | ✖ | FK_`InvoiceTable`_`DiningTable` | |
+| CustomerCount | int | ✔ | CK > 0 nếu có giá trị | Số khách được phân bổ cho bàn; NULL chỉ dùng cho dữ liệu cũ chưa thể suy ra |
 | AssignedAt | datetime2(0) | ✖ | DF `SYSDATETIME()` | Bàn gắn vào hóa đơn |
 | ReleasedAt | datetime2(0) | ✔ | CK ≥ AssignedAt | NULL = đang hoạt động |
 | IsPrimary | bit | ✖ | DF `0` | Bàn mở đầu (phân biệt khi ghép bàn) |
 
 **Chỉ mục đặc biệt:** UQ filtered `(TableId) WHERE ReleasedAt IS NULL` — mỗi bàn chỉ thuộc **một** hóa đơn đang mở.
-**Công dụng:** hỗ trợ ghép bàn (1 hóa đơn – N bàn) và chuyển bàn (đóng dòng cũ, mở dòng mới) mà vẫn báo cáo đúng theo bàn.
+**Công dụng:** hỗ trợ ghép bàn (1 hóa đơn – N bàn), lưu số khách riêng theo bàn để báo cáo không nhân lặp tổng khách hóa đơn, và chuyển bàn (đóng dòng cũ, mở dòng mới).
 
 #### 5.3.7 `InvoiceDetail`
 

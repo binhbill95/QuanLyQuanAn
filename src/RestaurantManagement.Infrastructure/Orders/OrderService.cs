@@ -252,6 +252,7 @@ public sealed class OrderService : IOrderService
                 {
                     Invoice = invoice,
                     TableId = table.Id,
+                    CustomerCount = input.CustomerCount,
                     AssignedAt = now,
                     IsPrimary = true,
                     CreatedAt = now,
@@ -557,6 +558,31 @@ public sealed class OrderService : IOrderService
                     return OperationResult<bool>.Failure("Bàn đích đang có khách.");
                 }
 
+                var activeTableCount = await _db.InvoiceTables.CountAsync(
+                    t => t.InvoiceId == invoiceId && t.ReleasedAt == null && !t.IsDeleted,
+                    token);
+                var customerCount = source.CustomerCount;
+                if (!customerCount.HasValue && activeTableCount == 1)
+                {
+                    customerCount = await _db.Invoices
+                        .Where(i => i.Id == invoiceId)
+                        .Select(i => (int?)i.CustomerCount)
+                        .FirstOrDefaultAsync(token);
+                    source.CustomerCount = customerCount;
+                }
+
+                if (!customerCount.HasValue)
+                {
+                    return OperationResult<bool>.Failure(
+                        "Không xác định được số khách gắn với bàn nguồn; cần cập nhật dữ liệu phân bổ khách trước khi chuyển bàn.");
+                }
+
+                if (customerCount.Value > targetTable.MaxSeats)
+                {
+                    return OperationResult<bool>.Failure(
+                        $"Bàn đích chỉ phục vụ tối đa {targetTable.MaxSeats} khách, không đủ cho {customerCount.Value} khách.");
+                }
+
                 var now = DateTime.UtcNow;
                 source.ReleasedAt = now;
                 source.UpdatedAt = now;
@@ -565,6 +591,7 @@ public sealed class OrderService : IOrderService
                 {
                     InvoiceId = invoiceId,
                     TableId = toTableId,
+                    CustomerCount = customerCount,
                     AssignedAt = now,
                     IsPrimary = source.IsPrimary,
                     CreatedAt = now,
@@ -638,6 +665,22 @@ public sealed class OrderService : IOrderService
                     return OperationResult<bool>.Failure("Hóa đơn cần gộp không có bàn đang phục vụ.");
                 }
 
+                var targetTables = await _db.InvoiceTables
+                    .Where(t => t.InvoiceId == targetInvoiceId && t.ReleasedAt == null && !t.IsDeleted)
+                    .ToListAsync(token);
+                if (targetTables.Any(t => !t.CustomerCount.HasValue) ||
+                    sourceTables.Any(t => !t.CustomerCount.HasValue))
+                {
+                    if (targetTables.Count != 1 || sourceTables.Count != 1)
+                    {
+                        return OperationResult<bool>.Failure(
+                            "Không xác định được số khách gắn với từng bàn của hóa đơn cũ; cần cập nhật dữ liệu phân bổ khách trước khi gộp.");
+                    }
+
+                    targetTables[0].CustomerCount = target.CustomerCount;
+                    sourceTables[0].CustomerCount = source.CustomerCount;
+                }
+
                 var targetTableIds = await _db.InvoiceTables
                     .Where(t => t.InvoiceId == targetInvoiceId && t.ReleasedAt == null && !t.IsDeleted)
                     .Select(t => t.TableId)
@@ -646,10 +689,12 @@ public sealed class OrderService : IOrderService
                 var combinedCapacity = await _db.DiningTables
                     .Where(t => allTableIds.Contains(t.Id))
                     .SumAsync(t => t.MaxSeats, token);
-                if (target.CustomerCount + source.CustomerCount > combinedCapacity)
+                var combinedCustomerCount = targetTables.Sum(t => t.CustomerCount!.Value) +
+                                            sourceTables.Sum(t => t.CustomerCount!.Value);
+                if (combinedCustomerCount > combinedCapacity)
                 {
                     return OperationResult<bool>.Failure(
-                        $"Sức chứa gộp là {combinedCapacity} chỗ, nhỏ hơn tổng {target.CustomerCount + source.CustomerCount} khách.");
+                        $"Sức chứa gộp là {combinedCapacity} chỗ, nhỏ hơn tổng {combinedCustomerCount} khách.");
                 }
 
                 var now = DateTime.UtcNow;
@@ -686,7 +731,7 @@ public sealed class OrderService : IOrderService
                 source.ClosedAt = now;
                 source.UpdatedAt = now;
                 source.UpdatedBy = _currentUser.UserId;
-                target.CustomerCount += source.CustomerCount;
+                target.CustomerCount = combinedCustomerCount;
                 target.UpdatedAt = now;
                 target.UpdatedBy = _currentUser.UserId;
 

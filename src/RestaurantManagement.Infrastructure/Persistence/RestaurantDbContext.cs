@@ -528,6 +528,7 @@ public partial class RestaurantDbContext : DbContext
             entity.Property(e => e.AssignedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_InvoiceTable_AssignedAt");
+            entity.Property(e => e.CustomerCount);
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(sysutcdatetime())", "DF_InvoiceTable_CreatedAt");
@@ -543,8 +544,8 @@ public partial class RestaurantDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_InvoiceTable_Invoice");
 
-            entity.HasOne(d => d.Table).WithOne(p => p.InvoiceTable)
-                .HasForeignKey<InvoiceTable>(d => d.TableId)
+            entity.HasOne(d => d.Table).WithMany(p => p.InvoiceTables)
+                .HasForeignKey(d => d.TableId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_InvoiceTable_Table");
         });

@@ -27,6 +27,7 @@ src/
 │   ├── Reporting/ReportingService.cs           # Báo cáo doanh thu, khách, món bán và lương
 │   ├── Persistence/RestaurantDbContext.cs
 │   └── DependencyInjection.cs
+├── RestaurantManagement.Tests/                # Kiểm thử tích hợp nghiệp vụ trên SQL Server riêng
 └── RestaurantManagement.Web/                 # MVC: Controller, View, Program.cs (composition root)
     ├── Controllers/AccountController.cs      # Login / Logout / ChangePassword
     ├── Controllers/EmployeesController.cs    # CRUD nhân viên (policy Management)
@@ -45,6 +46,8 @@ src/
     ├── Services/CurrentUserService.cs
     └── Views/Account/, Views/Accounts/, Views/Employees/, Views/Shifts/, Views/Schedules/, Views/Attendance/, Views/Payments/
 ```
+
+    Chạy kiểm thử nghiệp vụ có hỗ trợ Automation AI từ thư mục gốc repo bằng `.\database\run_automation_tests.ps1`. Test chỉ kết nối tới database riêng `RestaurantManagement_AutomationTest`.
 
 **Chiều phụ thuộc:** `Web → Infrastructure → Application → Domain`.
 
@@ -149,7 +152,7 @@ Thay `<MSSQL_SA_PASSWORD>` bằng mật khẩu đã đặt trong `docker/.env`.
 - Trạng thái món: `0` chờ → `1` đang chế biến → `2` hoàn thành; chỉ trạng thái `0` được hủy/đổi.
 - Đổi món ghi nhận món cũ đã hủy và thêm món thay thế trong cùng giao dịch; lý do được lưu.
 - Hàng đợi bếp lấy từ `vw_KitchenQueue`, sắp theo `OrderedAt` rồi `InvoiceDetailId`.
-- Chuyển bàn yêu cầu bàn đích trống; gộp yêu cầu hai hóa đơn đang mở và kiểm tra tổng sức chứa.
+- Chuyển bàn yêu cầu bàn đích trống và đủ sức chứa; gộp yêu cầu hai hóa đơn đang mở, giữ số khách từng bàn và kiểm tra tổng sức chứa.
 - Mỗi hóa đơn chỉ ghi nhận một thanh toán; `Payment.Amount` là tạm tính trừ giảm giá, không lưu tiền khách đưa hoặc tiền thối.
 - Chỉ MANAGER được nhập giảm giá; CASHIER chỉ thanh toán theo tổng đã tính. Món chờ/đang chế biến yêu cầu xác nhận rõ ràng trước khi đóng hóa đơn.
 - Thanh toán thành công đóng hóa đơn và giải phóng toàn bộ bàn liên kết trong cùng transaction.

@@ -124,6 +124,12 @@ public sealed class ShiftService : IShiftService
             return OperationResult<bool>.Failure("Không tìm thấy ca làm.");
         }
 
+        if (isActive &&
+            await HasActiveOverlapAsync(shift.StartTime, shift.EndTime, id, cancellationToken))
+        {
+            return OperationResult<bool>.Failure("Khung giờ bị chồng với một ca đang hoạt động.");
+        }
+
         shift.IsActive = isActive;
         shift.UpdatedAt = DateTime.UtcNow;
         shift.UpdatedBy = _currentUser.UserId;
@@ -244,6 +250,11 @@ public sealed class ShiftService : IShiftService
             return "Giờ bắt đầu phải trước giờ kết thúc.";
         }
 
+        if (input.IsActive && await HasActiveOverlapAsync(input.StartTime, input.EndTime, excludeId, cancellationToken))
+        {
+            return "Khung giờ bị chồng với một ca đang hoạt động.";
+        }
+
         // UQ_Shift_Name áp dụng cả bản ghi xóa mềm.
         var nameExists = await _db.Shifts
             .AnyAsync(s => s.Name == name && (excludeId == null || s.Id != excludeId), cancellationToken);
@@ -254,5 +265,20 @@ public sealed class ShiftService : IShiftService
         }
 
         return null;
+    }
+
+    private Task<bool> HasActiveOverlapAsync(
+        TimeOnly startTime,
+        TimeOnly endTime,
+        int? excludeId,
+        CancellationToken cancellationToken)
+    {
+        return _db.Shifts.AnyAsync(
+            shift => !shift.IsDeleted &&
+                     shift.IsActive &&
+                     (excludeId == null || shift.Id != excludeId) &&
+                     shift.StartTime < endTime &&
+                     startTime < shift.EndTime,
+            cancellationToken);
     }
 }

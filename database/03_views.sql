@@ -149,9 +149,11 @@ GO
    ------------------------------------------------------------------------------------- */
 CREATE OR ALTER VIEW dbo.vw_CustomerByEmployee
 AS
-SELECT YEAR(i.[ClosedAt])                    AS [Year],
+SELECT YEAR(DATEADD(day, 3 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
+                      CAST(i.[ClosedAt] AS date))) AS [Year],
        DATEPART(ISO_WEEK, i.[ClosedAt])      AS [Week],
-       MIN(CAST(i.[ClosedAt] AS date))       AS [WeekStartDate],
+       DATEADD(day, 0 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
+               CAST(i.[ClosedAt] AS date))   AS [WeekStartDate],
        e.[Id]                                AS [EmployeeId],
        e.[EmployeeCode],
        e.[FullName],
@@ -160,7 +162,12 @@ SELECT YEAR(i.[ClosedAt])                    AS [Year],
 FROM dbo.[Invoice] i
 JOIN dbo.[Employee] e ON e.[Id] = i.[OpenedByEmployeeId]
 WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
-GROUP BY YEAR(i.[ClosedAt]), DATEPART(ISO_WEEK, i.[ClosedAt]), e.[Id], e.[EmployeeCode], e.[FullName];
+GROUP BY YEAR(DATEADD(day, 3 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
+                      CAST(i.[ClosedAt] AS date))),
+         DATEPART(ISO_WEEK, i.[ClosedAt]),
+         DATEADD(day, 0 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
+                 CAST(i.[ClosedAt] AS date)),
+         e.[Id], e.[EmployeeCode], e.[FullName];
 GO
 
 /* -------------------------------------------------------------------------------------
@@ -168,18 +175,32 @@ GO
    ------------------------------------------------------------------------------------- */
 CREATE OR ALTER VIEW dbo.vw_CustomerByTable
 AS
-SELECT YEAR(i.[ClosedAt])             AS [Year],
-       DATEPART(QUARTER, i.[ClosedAt]) AS [Quarter],
-       MONTH(i.[ClosedAt])            AS [Month],
-       t.[Id]                         AS [TableId],
-       t.[TableNumber],
-       COUNT(DISTINCT i.[Id])         AS [InvoiceCount],
-       SUM(i.[CustomerCount])         AS [CustomerCount]
-FROM dbo.[Invoice] i
-JOIN dbo.[InvoiceTable] it ON it.[InvoiceId] = i.[Id] AND it.[IsDeleted] = 0
-JOIN dbo.[DiningTable] t   ON t.[Id] = it.[TableId]
-WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
-GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]), t.[Id], t.[TableNumber];
+WITH InvoiceTableCustomer AS
+(
+    SELECT YEAR(i.[ClosedAt])             AS [Year],
+           DATEPART(QUARTER, i.[ClosedAt]) AS [Quarter],
+           MONTH(i.[ClosedAt])            AS [Month],
+           i.[Id]                         AS [InvoiceId],
+           t.[Id]                         AS [TableId],
+           t.[TableNumber],
+           MAX(it.[CustomerCount])        AS [CustomerCount]
+    FROM dbo.[Invoice] i
+    JOIN dbo.[InvoiceTable] it ON it.[InvoiceId] = i.[Id] AND it.[IsDeleted] = 0
+    JOIN dbo.[DiningTable] t   ON t.[Id] = it.[TableId]
+    WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
+      AND it.[CustomerCount] IS NOT NULL
+    GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]),
+             i.[Id], t.[Id], t.[TableNumber]
+)
+SELECT [Year],
+       [Quarter],
+       [Month],
+       [TableId],
+       [TableNumber],
+       COUNT(*)                AS [InvoiceCount],
+       SUM([CustomerCount])    AS [CustomerCount]
+FROM InvoiceTableCustomer
+GROUP BY [Year], [Quarter], [Month], [TableId], [TableNumber];
 GO
 
 /* -------------------------------------------------------------------------------------

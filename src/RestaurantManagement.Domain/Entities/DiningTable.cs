@@ -31,7 +31,7 @@ public partial class DiningTable
 
     public virtual Area? Area { get; set; }
 
-    public virtual InvoiceTable? InvoiceTable { get; set; }
+    public virtual ICollection<InvoiceTable> InvoiceTables { get; set; } = new List<InvoiceTable>();
 
     public virtual ICollection<TableTransferLog> TableTransferLogFromTables { get; set; } = new List<TableTransferLog>();
 

@@ -11,6 +11,8 @@ public partial class InvoiceTable
 
     public int TableId { get; set; }
 
+    public int? CustomerCount { get; set; }
+
     public DateTime AssignedAt { get; set; }
 
     public DateTime? ReleasedAt { get; set; }
