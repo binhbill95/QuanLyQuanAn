@@ -2,155 +2,169 @@
     ViewData["Title"] = "Trang chủ";
 
     var fullName = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name;
-    var roleCode = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+    var roleName = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
     var isManagement = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER");
     var canTakeOrders = isManagement || User.IsInRole("WAITER") || User.IsInRole("CASHIER");
     var canUseKitchen = isManagement || User.IsInRole("KITCHEN");
     var canTakePayment = User.IsInRole("MANAGER") || User.IsInRole("CASHIER");
+    var today = DateTime.Now.ToString("dddd, dd/MM/yyyy · HH:mm", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
 }
 
-<div class="d-flex justify-content-between align-items-end mb-4">
-    <div>
-        <h1 class="h3 mb-1">Xin chào, @fullName</h1>
-        <p class="text-muted mb-0">Vai trò: <span class="badge bg-secondary">@roleCode</span></p>
+<section class="dashboard-hero mb-4">
+    <div class="dashboard-hero-content">
+        <div class="dashboard-eyebrow"><span class="status-dot"></span> TỔNG QUAN NHÀ HÀNG</div>
+        <h1>Xin chào, @fullName</h1>
+        <p>Chúc bạn một ca làm hiệu quả. Chọn khu vực để bắt đầu công việc.</p>
+        <div class="dashboard-meta">
+            <span class="role-chip">@roleName</span>
+            <span class="dashboard-date">@today</span>
+        </div>
     </div>
-    <div class="text-muted small">@DateTime.Now.ToString("dddd, dd/MM/yyyy HH:mm")</div>
+    <div class="dashboard-hero-actions">
+        @if (canTakeOrders)
+        {
+            <a asp-controller="Orders" asp-action="Index" class="btn btn-dashboard-primary">
+                <span aria-hidden="true">＋</span> Mở bán hàng
+            </a>
+        }
+        @if (canUseKitchen)
+        {
+            <a asp-controller="Kitchen" asp-action="Queue" class="btn btn-dashboard-secondary">
+                Xem hàng đợi bếp <span aria-hidden="true">→</span>
+            </a>
+        }
+    </div>
+</section>
+
+<div class="dashboard-section-heading">
+    <div>
+        <h2>Các khu vực làm việc</h2>
+        <p>Truy cập nhanh các chức năng theo quyền tài khoản.</p>
+    </div>
+    <span class="module-count">@( (isManagement ? 4 : 0) + 3 + (canTakeOrders ? 1 : 0) + (canUseKitchen ? 1 : 0) + (canTakePayment ? 1 : 0) ) khu vực</span>
 </div>
 
-<div class="row g-3">
+<div class="row g-3 dashboard-grid">
     @if (isManagement)
     {
-        <div class="col-md-4">
-            <a asp-controller="Employees" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Quản lý nhân viên</h2>
-                        <p class="card-text small text-muted">Hồ sơ nhân viên, tìm kiếm, xóa mềm.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Employees" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-people">NS</span><span class="module-arrow">↗</span></div>
+                    <h3>Quản lý nhân viên</h3>
+                    <p>Hồ sơ nhân viên, tìm kiếm và quản lý trạng thái làm việc.</p>
+                    <span class="module-label">NHÂN SỰ</span>
+                </article>
             </a>
         </div>
-
-        <div class="col-md-4">
-            <a asp-controller="Shifts" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Ca làm &amp; lịch ca</h2>
-                        <p class="card-text small text-muted">Cấu hình ca, phân ca nhân viên, xếp lịch theo ngày.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Shifts" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-time">CA</span><span class="module-arrow">↗</span></div>
+                    <h3>Ca làm &amp; lịch ca</h3>
+                    <p>Cấu hình ca, phân ca nhân viên và xếp lịch theo ngày.</p>
+                    <span class="module-label">NHÂN SỰ</span>
+                </article>
             </a>
         </div>
-
     }
 
-    <div class="col-md-4">
-        <a asp-controller="Menu" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 card-title">Thực đơn</h2>
-                    <p class="card-text small text-muted">Xem món theo nhóm, giá bán và tình trạng còn/hết.</p>
-                    <span class="badge bg-success">Đã có</span>
-                </div>
-            </div>
+    <div class="col-sm-6 col-xl-4">
+        <a asp-controller="Menu" asp-action="Index" class="dashboard-card-link">
+            <article class="dashboard-card">
+                <div class="dashboard-card-top"><span class="module-icon icon-menu">MÓN</span><span class="module-arrow">↗</span></div>
+                <h3>Thực đơn</h3>
+                <p>Xem món theo nhóm, giá bán và tình trạng còn hoặc hết.</p>
+                <span class="module-label">BÁN HÀNG</span>
+            </article>
         </a>
     </div>
-    <div class="col-md-4">
-        <a asp-controller="Tables" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 card-title">Bàn ăn</h2>
-                    <p class="card-text small text-muted">Sơ đồ bàn theo khu vực và trạng thái phục vụ.</p>
-                    <span class="badge bg-success">Đã có</span>
-                </div>
-            </div>
+    <div class="col-sm-6 col-xl-4">
+        <a asp-controller="Tables" asp-action="Index" class="dashboard-card-link">
+            <article class="dashboard-card">
+                <div class="dashboard-card-top"><span class="module-icon icon-tables">BÀN</span><span class="module-arrow">↗</span></div>
+                <h3>Bàn ăn</h3>
+                <p>Sơ đồ bàn theo khu vực và trạng thái phục vụ hiện tại.</p>
+                <span class="module-label">BÁN HÀNG</span>
+            </article>
         </a>
     </div>
-
-    <div class="col-md-4">
-        <a asp-controller="Attendance" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h2 class="h6 card-title">Chấm công</h2>
-                    <p class="card-text small text-muted">Check-in/check-out theo ca, duyệt công.</p>
-                    <span class="badge bg-success">Đã có</span>
-                </div>
-            </div>
+    <div class="col-sm-6 col-xl-4">
+        <a asp-controller="Attendance" asp-action="Index" class="dashboard-card-link">
+            <article class="dashboard-card">
+                <div class="dashboard-card-top"><span class="module-icon icon-attendance">CÔNG</span><span class="module-arrow">↗</span></div>
+                <h3>Chấm công</h3>
+                <p>Check-in, check-out theo ca và theo dõi duyệt công.</p>
+                <span class="module-label">NHÂN SỰ</span>
+            </article>
         </a>
     </div>
 
     @if (User.IsInRole("ADMIN"))
     {
-        <div class="col-md-4">
-            <a asp-controller="Accounts" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Tài khoản</h2>
-                        <p class="card-text small text-muted">Cấp tài khoản, đổi vai trò, đặt lại mật khẩu, khóa/mở.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Accounts" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-accounts">TK</span><span class="module-arrow">↗</span></div>
+                    <h3>Tài khoản</h3>
+                    <p>Cấp tài khoản, phân quyền và quản lý trạng thái truy cập.</p>
+                    <span class="module-label">HỆ THỐNG</span>
+                </article>
             </a>
         </div>
     }
 
     @if (canTakeOrders)
     {
-        <div class="col-md-4">
-            <a asp-controller="Orders" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Gọi món</h2>
-                        <p class="card-text small text-muted">Mở bàn, gọi thêm món, hủy món chờ, chuyển/gộp bàn.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Orders" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card dashboard-card-featured">
+                    <div class="dashboard-card-top"><span class="module-icon icon-orders">POS</span><span class="module-arrow">↗</span></div>
+                    <h3>Gọi món</h3>
+                    <p>Mở bàn, gọi món, chuyển bàn và theo dõi hóa đơn đang phục vụ.</p>
+                    <span class="module-label">BÁN HÀNG</span>
+                </article>
             </a>
         </div>
     }
     @if (canUseKitchen)
     {
-        <div class="col-md-4">
-            <a asp-controller="Kitchen" asp-action="Queue" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Hàng đợi bếp</h2>
-                        <p class="card-text small text-muted">Nhận món, theo dõi FIFO và cập nhật hoàn thành.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Kitchen" asp-action="Queue" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-kitchen">BẾP</span><span class="module-arrow">↗</span></div>
+                    <h3>Hàng đợi bếp</h3>
+                    <p>Nhận món theo thứ tự gọi và cập nhật tiến độ chế biến.</p>
+                    <span class="module-label">VẬN HÀNH</span>
+                </article>
             </a>
         </div>
     }
 
     @if (canTakePayment)
     {
-        <div class="col-md-4">
-            <a asp-controller="Payments" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Thanh toán</h2>
-                        <p class="card-text small text-muted">Tính tiền, giảm giá theo quyền, in hóa đơn và giải phóng bàn.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Payments" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-payment">THU</span><span class="module-arrow">↗</span></div>
+                    <h3>Thanh toán</h3>
+                    <p>Tính tiền, áp dụng giảm giá theo quyền và đóng hóa đơn.</p>
+                    <span class="module-label">BÁN HÀNG</span>
+                </article>
             </a>
         </div>
     }
 
     @if (isManagement)
     {
-        <div class="col-md-4">
-            <a asp-controller="Reports" asp-action="Index" class="text-decoration-none text-reset">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h2 class="h6 card-title">Báo cáo</h2>
-                        <p class="card-text small text-muted">Doanh thu, khách, món bán, ca làm và lương.</p>
-                        <span class="badge bg-success">Đã có</span>
-                    </div>
-                </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="Reports" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-reports">BC</span><span class="module-arrow">↗</span></div>
+                    <h3>Báo cáo</h3>
+                    <p>Doanh thu, khách, món bán và tình hình hoạt động.</p>
+                    <span class="module-label">QUẢN LÝ</span>
+                </article>
             </a>
         </div>
     }

@@ -6,6 +6,8 @@
    Tài khoản mẫu:
        admin    / Admin@123   (vai trò ADMIN, không gắn nhân viên)
        manager  / Admin@123   (vai trò MANAGER, gắn nhân viên NV001)
+       sale     / Admin@123   (vai trò WAITER, gắn nhân viên NV002)
+       bep      / Admin@123   (vai trò KITCHEN, không gắn nhân viên)
    ===================================================================================== */
 
 SET NOCOUNT ON;
@@ -126,6 +128,23 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'manager')
     FROM dbo.[Role] r
     CROSS JOIN dbo.[Employee] e
     WHERE r.[Code] = 'MANAGER' AND e.[EmployeeCode] = 'NV001';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'sale')
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    SELECT 'sale',
+           'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
+           r.[Id], e.[Id], 1
+    FROM dbo.[Role] r
+    CROSS JOIN dbo.[Employee] e
+    WHERE r.[Code] = 'WAITER' AND e.[EmployeeCode] = 'NV002';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'bep')
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    SELECT 'bep',
+           'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
+           r.[Id], NULL, 1
+    FROM dbo.[Role] r
+    WHERE r.[Code] = 'KITCHEN';
 GO
 
 /* ---------- 7. Trình độ của nhân viên ---------------------------------------------- */

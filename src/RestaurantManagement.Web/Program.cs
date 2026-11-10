@@ -108,7 +108,7 @@ app.MapControllerRoute(
 // Health check tạm thời cho Phase 1: xác nhận ứng dụng kết nối được SQL Server.
 // Sẽ được thay bằng ASP.NET Core HealthChecks ở giai đoạn sau.
 // ---------------------------------------------------------------------------------
-app.MapGet("/health/db", async (RestaurantDbContext db) =>
+app.MapGet("/health/db", async (RestaurantDbContext db, ILogger<RestaurantDbContext> logger) =>
 {
     try
     {
@@ -116,22 +116,16 @@ app.MapGet("/health/db", async (RestaurantDbContext db) =>
 
         if (!canConnect)
         {
-            return Results.Json(new { status = "unhealthy", database = "RestaurantManagement" },
+            return Results.Json(new { status = "unhealthy" },
                 statusCode: StatusCodes.Status503ServiceUnavailable);
         }
 
-        var employees = await db.Employees.CountAsync(cancellationToken: default);
-
-        return Results.Json(new
-        {
-            status = "healthy",
-            database = "RestaurantManagement",
-            employees
-        });
+        return Results.Json(new { status = "healthy" });
     }
     catch (Exception ex)
     {
-        return Results.Json(new { status = "unhealthy", error = ex.Message },
+        logger.LogError(ex, "Database health check failed.");
+        return Results.Json(new { status = "unhealthy" },
             statusCode: StatusCodes.Status503ServiceUnavailable);
     }
 }).WithName("HealthDb");

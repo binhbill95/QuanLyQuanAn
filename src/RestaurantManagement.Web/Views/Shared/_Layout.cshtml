@@ -11,9 +11,12 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-xl navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-lg navbar-light app-navbar">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Quản lý quán ăn</a>
+                <a class="navbar-brand app-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-brand-mark" aria-hidden="true">Q</span>
+                    <span>Quản lý quán ăn<small>RESTAURANT MANAGEMENT</small></span>
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -86,9 +89,12 @@
                         {
                             var roleName = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
                             <li class="nav-item">
-                                <span class="navbar-text me-3">
-                                    @User.Identity.Name
-                                    <span class="badge bg-secondary ms-1">@roleName</span>
+                                <span class="navbar-text user-chip me-lg-2">
+                                    <span class="user-avatar" aria-hidden="true">@((User.Identity?.Name ?? "?").Substring(0, 1).ToUpperInvariant())</span>
+                                    <span class="user-chip-copy">
+                                        <strong>@(User.Identity?.Name ?? "Người dùng")</strong>
+                                        <small>@roleName</small>
+                                    </span>
                                 </span>
                             </li>
                             <li class="nav-item">
@@ -111,15 +117,16 @@
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container app-container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Hệ thống quản lý quán ăn
+    <footer class="app-footer">
+        <div class="container d-flex justify-content-between align-items-center">
+            <span>&copy; 2026 Hệ thống quản lý quán ăn</span>
+            <span class="footer-caption">VẬN HÀNH NHÀ HÀNG THÔNG MINH</span>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

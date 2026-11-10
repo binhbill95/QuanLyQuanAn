@@ -22,6 +22,14 @@ Các biện pháp trên không đồng nghĩa ứng dụng đã được kiểm 
 - Cấu hình ứng dụng demo vẫn dùng tài khoản SQL `sa` trong hướng dẫn cục bộ. Đây là lựa chọn đơn giản cho đồ án, không phải nguyên tắc least-privilege cho môi trường production.
 - README và hướng dẫn Docker đã ghi rõ giới hạn demo và cảnh báo không dùng cấu hình này cho production.
 
+## Rà soát bổ sung — 03/11/2026
+
+| Severity | File | Phát hiện | Trạng thái |
+|---|---|---|---|
+| 🟡 MEDIUM | `src/RestaurantManagement.Web/Program.cs` — `/health/db` | Endpoint ẩn danh từng trả số lượng nhân viên và nội dung exception database cho client. | Đã sửa: chỉ trả `status`; exception được ghi vào log máy chủ, không trả chi tiết nội bộ. |
+
+Endpoint vẫn công khai trạng thái healthy/unhealthy để tiện kiểm tra môi trường demo. Khi triển khai production, cần giới hạn truy cập endpoint theo hạ tầng giám sát/mạng nội bộ nếu chính sách vận hành yêu cầu.
+
 ## Rủi ro còn lại và khuyến nghị nếu triển khai thật
 
 Tài khoản và mật khẩu mẫu vẫn được lưu trong script seed công khai; người tải repo có thể đọc chúng và database khởi tạo mới sẽ tạo tài khoản đó. Việc ẩn chúng khỏi giao diện Production không vô hiệu hóa tài khoản ở database. Vì vậy không đưa database demo hoặc ứng dụng dùng database demo lên Internet.

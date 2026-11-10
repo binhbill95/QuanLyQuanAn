@@ -104,8 +104,12 @@ Thay `<MSSQL_SA_PASSWORD>` bằng mật khẩu đã đặt trong `docker/.env`.
 |-----------|----------|---------|
 | `admin` | `Admin@123` | ADMIN |
 | `manager` | `Admin@123` | MANAGER |
+| `sale` | `Admin@123` | WAITER (mở bàn, gọi món) |
+| `bep` | `Admin@123` | KITCHEN (nhận món, cập nhật trạng thái bếp) |
 
 - Chưa đăng nhập: mọi trang (trừ Login/Health) chuyển hướng về `/Account/Login`.
+- Tài khoản `sale` không có quyền thanh toán; dùng `manager` để kiểm thử checkout.
+- Hướng dẫn mở bàn và gọi món: `../docs/27_UserGuide_OpenTableAndOrder.docx`.
 - Đổi mật khẩu: menu **Đổi mật khẩu** → thành công sẽ đăng xuất và yêu cầu đăng nhập lại.
 - Kiểm tra kết nối DB: `GET http://localhost:5010/health/db` (ẩn danh).
 

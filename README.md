@@ -98,8 +98,12 @@ Database seed sẵn các tài khoản:
 |---|---|---|
 | `admin` | `Admin@123` | Quản trị hệ thống |
 | `manager` | `Admin@123` | Quản lý quán |
+| `sale` | `Admin@123` | Phục vụ — mở bàn và gọi món |
+| `bep` | `Admin@123` | Bếp — nhận món và cập nhật trạng thái |
 
 Đây là thông tin đăng nhập **chỉ dành cho database demo cục bộ**. Đổi mật khẩu sau khi đăng nhập; không dùng các tài khoản này cho môi trường triển khai thật. Script seed tạo lại các tài khoản demo khi khởi tạo database mới.
+
+Tài khoản `sale` có quyền phục vụ nhưng không có quyền thanh toán; dùng `manager` để demo thanh toán.
 
 ## Gợi ý kiểm tra khi chấm đồ án
 
@@ -131,6 +135,8 @@ src/        Solution ASP.NET Core MVC, Clean Architecture và kiểm thử tích
 - `docs/02_BusinessRequirements.md` — yêu cầu nghiệp vụ.
 - `docs/03_UserRoles.md` — vai trò và phạm vi quyền.
 - `docs/04_UseCases.md` — ca sử dụng.
+- `docs/27_UserGuide_OpenTableAndOrder.docx` — hướng dẫn Word mở bàn và gọi món.
+- `docs/27_UserGuide_OpenTableAndOrder.md` — hướng dẫn thao tác mở bàn và gọi món.
 - `docs/sequence.md` — biểu đồ tuần tự các luồng nghiệp vụ chính.
 - `docs/11_DatabaseSchemaDesign.md` — thiết kế cơ sở dữ liệu.
 - `docs/09_DevelopmentRoadmap.md` — roadmap.
