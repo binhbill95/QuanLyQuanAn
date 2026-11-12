@@ -82,14 +82,16 @@ Thay `<MSSQL_SA_PASSWORD>` bằng mật khẩu đã đặt trong `docker/.env`.
 | Thực đơn | Xem món theo nhóm, tìm kiếm, giá bán, trạng thái còn/hết | Tất cả |
 | Thực đơn | Thêm/sửa/xóa mềm món, ảnh, đơn vị và mô tả | ADMIN, OWNER, MANAGER |
 | Nhóm món | Thêm/sửa/ngừng/kích hoạt/xóa mềm, sắp xếp thứ tự | ADMIN, OWNER, MANAGER |
-| Bàn ăn | Xem sơ đồ bàn và trạng thái (trống/có khách/đợi món/món xong) | Tất cả |
-| Bàn ăn | Quản lý khu vực, bàn, sức chứa; chặn xóa/ngừng bàn đang có khách | ADMIN, OWNER, MANAGER |
+| Bàn ăn | Xem sơ đồ bàn theo khu vực và trạng thái (trống/có khách/đợi món/món xong) | Tất cả |
+| Bàn ăn | Thêm/sửa/ngừng khu vực (ví dụ Trệt, Lầu 1), gán bàn vào khu vực, quản lý sức chứa | ADMIN, OWNER, MANAGER |
 | Gọi món | Mở bàn/hóa đơn, nhập khách, gọi thêm món, lưu giá tại thời điểm gọi | ADMIN, OWNER, MANAGER, WAITER, CASHIER |
 | Gọi món | Hủy món chờ hoặc đổi món nguyên tử (lưu lý do); không hủy món bếp đã nhận | ADMIN, OWNER, MANAGER, WAITER, CASHIER |
 | Gọi món | Chuyển bàn trống; gộp hóa đơn và giữ nhật ký chuyển/gộp bàn | ADMIN, OWNER, MANAGER, WAITER, CASHIER |
-| Bếp | Hàng đợi FIFO, nhận chế biến và đánh dấu hoàn thành | ADMIN, OWNER, MANAGER, KITCHEN |
-| Thanh toán | Tính tiền, tiền mặt/chuyển khoản, đóng hóa đơn, giải phóng bàn, in biên nhận | MANAGER, CASHIER |
+| Bếp | Xem hàng đợi FIFO | ADMIN, OWNER, MANAGER, KITCHEN, CASHIER (chỉ xem) |
+| Bếp | Nhận chế biến và đánh dấu hoàn thành | ADMIN, OWNER, MANAGER, KITCHEN |
+| Thanh toán | Tính tiền, tiền mặt/chuyển khoản, VietQR, đóng hóa đơn, giải phóng bàn, in biên nhận | MANAGER, CASHIER |
 | Thanh toán | Nhập giảm giá và xác nhận thanh toán khi còn món chưa hoàn thành | Giảm giá: MANAGER; xác nhận: MANAGER, CASHIER |
+| Cài đặt | Cập nhật hotline và đường dẫn Zalo hiển thị trong ứng dụng | ADMIN, OWNER, MANAGER |
 | Báo cáo | Doanh thu, khách theo ca/nhân viên/bàn, món bán, công đã duyệt và lương | ADMIN, OWNER, MANAGER |
 | Nhân viên | Danh sách, tìm kiếm/lọc/phân trang, thêm, sửa, chi tiết, xóa mềm | ADMIN, OWNER, MANAGER |
 | Ca làm | Danh sách/thêm/sửa ca, ngừng–kích hoạt, phân ca cho nhân viên | ADMIN, OWNER, MANAGER |
@@ -105,10 +107,12 @@ Thay `<MSSQL_SA_PASSWORD>` bằng mật khẩu đã đặt trong `docker/.env`.
 | `admin` | `Admin@123` | ADMIN |
 | `manager` | `Admin@123` | MANAGER |
 | `sale` | `Admin@123` | WAITER (mở bàn, gọi món) |
+| `thungan` | `Admin@123` | CASHIER (thanh toán, in hóa đơn) |
 | `bep` | `Admin@123` | KITCHEN (nhận món, cập nhật trạng thái bếp) |
 
 - Chưa đăng nhập: mọi trang (trừ Login/Health) chuyển hướng về `/Account/Login`.
-- Tài khoản `sale` không có quyền thanh toán; dùng `manager` để kiểm thử checkout.
+- Tài khoản `sale` không có quyền thanh toán; dùng `thungan` hoặc `manager` để kiểm thử checkout.
+- Cấu hình VietQR tại **Quản lý → Tài khoản nhận chuyển khoản** (chỉ ADMIN); giao dịch ngân hàng phải được thu ngân xác nhận thủ công.
 - Hướng dẫn mở bàn và gọi món: `../docs/27_UserGuide_OpenTableAndOrder.docx`.
 - Đổi mật khẩu: menu **Đổi mật khẩu** → thành công sẽ đăng xuất và yêu cầu đăng nhập lại.
 - Kiểm tra kết nối DB: `GET http://localhost:5010/health/db` (ẩn danh).

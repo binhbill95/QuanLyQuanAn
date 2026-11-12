@@ -1,6 +1,8 @@
 @model IReadOnlyList<KitchenQueueItemDto>
 @{
     ViewData["Title"] = "Hàng đợi bếp";
+    var canUpdateKitchenQueue = User.IsInRole("ADMIN") || User.IsInRole("OWNER") ||
+        User.IsInRole("MANAGER") || User.IsInRole("KITCHEN");
 }
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -43,16 +45,25 @@ else
                         }
                         <div class="small text-muted">Đã chờ @(item.WaitingMinutes ?? 0) phút · gọi lúc @item.OrderedAt.ToLocalTime().ToString("HH:mm:ss")</div>
                     </div>
-                    <div class="card-footer bg-white">
-                        <form asp-action="SetStatus" method="post">
-                            <input type="hidden" name="detailId" value="@item.DetailId" />
-                            <input type="hidden" name="status" value="@(item.Status == 0 ? 1 : 2)" />
-                            <button type="submit" class="btn @(item.Status == 0 ? "btn-primary" : "btn-success") w-100">
-                                @(item.Status == 0 ? "Nhận chế biến" : "Đánh dấu hoàn thành")
-                            </button>
-                        </form>
-                    </div>
+                    @if (canUpdateKitchenQueue)
+                    {
+                        <div class="card-footer bg-white">
+                            <form asp-action="SetStatus" method="post">
+                                <input type="hidden" name="detailId" value="@item.DetailId" />
+                                <input type="hidden" name="status" value="@(item.Status == 0 ? 1 : 2)" />
+                                <button type="submit" class="btn @(item.Status == 0 ? "btn-primary" : "btn-success") w-100">
+                                    @(item.Status == 0 ? "Nhận chế biến" : "Đánh dấu hoàn thành")
+                                </button>
+                            </form>
+                        </div>
+                    }
                 </article>
+            </div>
+        }
+        @if (!canUpdateKitchenQueue)
+        {
+            <div class="alert alert-info mt-3 mb-0">
+                Bạn đang xem ở chế độ chỉ đọc. Bếp cập nhật trạng thái món trên màn hình này.
             </div>
         }
     </div>

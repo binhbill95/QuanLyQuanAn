@@ -7,6 +7,7 @@
        admin    / Admin@123   (vai trò ADMIN, không gắn nhân viên)
        manager  / Admin@123   (vai trò MANAGER, gắn nhân viên NV001)
        sale     / Admin@123   (vai trò WAITER, gắn nhân viên NV002)
+       thungan  / Admin@123   (vai trò CASHIER, gắn nhân viên NV005)
        bep      / Admin@123   (vai trò KITCHEN, không gắn nhân viên)
    ===================================================================================== */
 
@@ -109,6 +110,13 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV004')
     SELECT 'NV004', N'Phạm Minh Dũng', 1, '1997-07-07', p.[Id],
            '0934567890', N'23 Võ Văn Tần, Quận 3, TP.HCM', '079197004567', '2024-08-20', 0, N'Pha chế'
     FROM dbo.[Position] p WHERE p.[Code] = 'BARTENDER';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV005')
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+                                [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
+    SELECT 'NV005', N'Nguyễn Thị Thu Ngân', 0, '2001-05-15', p.[Id],
+           '0945678901', N'10 Nguyễn Huệ, Quận 1, TP.HCM', '079201005678', '2025-01-10', 0, N'Thu ngân demo'
+    FROM dbo.[Position] p WHERE p.[Code] = 'RECEPTION';
 GO
 
 /* ---------- 6. Tài khoản ----------------------------------------------------------- */
@@ -145,6 +153,15 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'bep')
            r.[Id], NULL, 1
     FROM dbo.[Role] r
     WHERE r.[Code] = 'KITCHEN';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'thungan')
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    SELECT 'thungan',
+           'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
+           r.[Id], e.[Id], 1
+    FROM dbo.[Role] r
+    CROSS JOIN dbo.[Employee] e
+    WHERE r.[Code] = 'CASHIER' AND e.[EmployeeCode] = 'NV005';
 GO
 
 /* ---------- 7. Trình độ của nhân viên ---------------------------------------------- */
@@ -189,25 +206,35 @@ WHERE u.[Code] = 'U001'
 GO
 
 /* ---------- 10. Khu vực & bàn ----------------------------------------------------- */
-IF NOT EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Tầng 1')
-    INSERT INTO dbo.[Area] ([Name], [DisplayOrder]) VALUES (N'Tầng 1', 1);
-IF NOT EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Tầng 2')
-    INSERT INTO dbo.[Area] ([Name], [DisplayOrder]) VALUES (N'Tầng 2', 2);
+IF NOT EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Trệt')
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Tầng 1')
+        UPDATE dbo.[Area] SET [Name] = N'Trệt' WHERE [Name] = N'Tầng 1';
+    ELSE
+        INSERT INTO dbo.[Area] ([Name], [DisplayOrder]) VALUES (N'Trệt', 1);
+END
+IF NOT EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Lầu 1')
+BEGIN
+    IF EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Tầng 2')
+        UPDATE dbo.[Area] SET [Name] = N'Lầu 1' WHERE [Name] = N'Tầng 2';
+    ELSE
+        INSERT INTO dbo.[Area] ([Name], [DisplayOrder]) VALUES (N'Lầu 1', 2);
+END
 IF NOT EXISTS (SELECT 1 FROM dbo.[Area] WHERE [Name] = N'Sân vườn')
     INSERT INTO dbo.[Area] ([Name], [DisplayOrder]) VALUES (N'Sân vườn', 3);
 GO
 
 ;WITH TableSeed AS (
     SELECT * FROM (VALUES
-        ('B01', 4, 1), ('B02', 4, 1), ('B03', 2, 1), ('B04', 6, 1),
-        ('B05', 4, 2), ('B06', 4, 2), ('B07', 8, 2),
-        ('B08', 4, 3), ('B09', 6, 3), ('B10', 10, 3)
-    ) AS v(TableNumber, MaxSeats, AreaOrder)
+        ('B01', 4, N'Trệt'), ('B02', 4, N'Trệt'), ('B03', 2, N'Trệt'), ('B04', 6, N'Trệt'),
+        ('B05', 4, N'Lầu 1'), ('B06', 4, N'Lầu 1'), ('B07', 8, N'Lầu 1'),
+        ('B08', 4, N'Sân vườn'), ('B09', 6, N'Sân vườn'), ('B10', 10, N'Sân vườn')
+    ) AS v(TableNumber, MaxSeats, AreaName)
 )
 INSERT INTO dbo.[DiningTable] ([TableNumber], [AreaId], [MaxSeats])
 SELECT t.TableNumber, a.[Id], t.MaxSeats
 FROM TableSeed t
-JOIN dbo.[Area] a ON a.[DisplayOrder] = t.AreaOrder
+JOIN dbo.[Area] a ON a.[Name] = t.AreaName
 WHERE NOT EXISTS (SELECT 1 FROM dbo.[DiningTable] dt WHERE dt.[TableNumber] = t.TableNumber);
 GO
 
@@ -268,6 +295,34 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'ReportShi
 IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'RestaurantName')
     INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
     VALUES ('RestaurantName', N'Quán Ăn Demo', 'string', N'Tên quán in trên hóa đơn');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'TransferBankCode')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('TransferBankCode', N'', 'string', N'Mã BIN ngân hàng dùng tạo VietQR');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'TransferBankName')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('TransferBankName', N'', 'string', N'Tên ngân hàng nhận chuyển khoản');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'TransferAccountNumber')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('TransferAccountNumber', N'', 'string', N'Số tài khoản nhận chuyển khoản');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'TransferAccountName')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('TransferAccountName', N'', 'string', N'Tên chủ tài khoản nhận chuyển khoản');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'TransferBranch')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('TransferBranch', N'', 'string', N'Chi nhánh ngân hàng');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'SupportHotline')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('SupportHotline', N'', 'string', N'Số điện thoại hotline hỗ trợ');
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[SystemParameter] WHERE [ParamKey] = 'SupportZaloUrl')
+    INSERT INTO dbo.[SystemParameter] ([ParamKey], [ParamValue], [DataType], [Description])
+    VALUES ('SupportZaloUrl', N'', 'string', N'Đường dẫn Zalo hỗ trợ');
 GO
 
 /* ---------- 13. Lịch làm việc mẫu (hôm nay & ngày mai) ----------------------------- */

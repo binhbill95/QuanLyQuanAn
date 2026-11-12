@@ -1,0 +1,74 @@
+@model BankTransferSettingsViewModel
+@{
+    ViewData["Title"] = "Tài khoản nhận chuyển khoản";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Tài khoản nhận chuyển khoản</h1>
+        <p class="text-muted mb-0">Cấu hình VietQR dùng cho thanh toán và biên nhận.</p>
+    </div>
+    <a asp-controller="Payments" asp-action="Index" class="btn btn-outline-secondary">Quay lại thanh toán</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form asp-action="Index" method="post" class="card shadow-sm">
+            <div class="card-body p-4">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="BankCode" class="form-label"></label>
+                    <input asp-for="BankCode" class="form-control" inputmode="numeric" autocomplete="off" placeholder="Ví dụ: mã BIN 6 chữ số" />
+                    <span asp-validation-for="BankCode" class="text-danger"></span>
+                    <div class="form-text">Nhập mã BIN VietQR 6 chữ số của ngân hàng, không phải tên viết tắt.</div>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="BankName" class="form-label"></label>
+                    <input asp-for="BankName" class="form-control" autocomplete="organization" />
+                    <span asp-validation-for="BankName" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="AccountNumber" class="form-label"></label>
+                    <input asp-for="AccountNumber" class="form-control font-monospace" autocomplete="off" />
+                    <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="AccountName" class="form-label"></label>
+                    <input asp-for="AccountName" class="form-control text-uppercase" autocomplete="off" />
+                    <span asp-validation-for="AccountName" class="text-danger"></span>
+                    <div class="form-text">Nhập đúng tên chủ tài khoản theo ngân hàng, tối đa 25 ký tự.</div>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Branch" class="form-label"></label>
+                    <input asp-for="Branch" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Branch" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu thông tin ngân hàng</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-5">
+        <aside class="card border-0 bg-light h-100">
+            <div class="card-body p-4">
+                <h2 class="h5">Cách hoạt động</h2>
+                <ol class="small text-muted ps-3 mb-3">
+                    <li class="mb-2">Thu ngân chọn <strong>Chuyển khoản</strong> ở màn hình thanh toán.</li>
+                    <li class="mb-2">Ứng dụng tạo QR VietQR tại máy chủ, kèm số tiền và mã hóa đơn.</li>
+                    <li>Thu ngân kiểm tra giao dịch trong ngân hàng rồi mới xác nhận thanh toán.</li>
+                </ol>
+                <div class="alert alert-warning small mb-0">
+                    QR chỉ tạo lệnh chuyển khoản, không tự xác nhận tiền đã vào tài khoản. Không lưu mã PIN, mật khẩu ngân hàng hoặc khóa API tại đây.
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

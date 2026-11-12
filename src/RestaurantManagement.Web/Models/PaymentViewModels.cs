@@ -16,6 +16,8 @@ public sealed class PaymentCheckoutViewModel
     public required PaymentFormViewModel Form { get; init; }
 
     public bool CanApplyDiscount { get; init; }
+
+    public required BankTransferSettingsDto Bank { get; init; }
 }
 
 public sealed class PaymentFormViewModel

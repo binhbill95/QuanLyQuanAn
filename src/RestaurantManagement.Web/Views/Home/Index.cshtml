@@ -5,7 +5,7 @@
     var roleName = User.FindFirst("role_name")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
     var isManagement = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER");
     var canTakeOrders = isManagement || User.IsInRole("WAITER") || User.IsInRole("CASHIER");
-    var canUseKitchen = isManagement || User.IsInRole("KITCHEN");
+    var canViewKitchenQueue = isManagement || User.IsInRole("KITCHEN") || User.IsInRole("CASHIER");
     var canTakePayment = User.IsInRole("MANAGER") || User.IsInRole("CASHIER");
     var today = DateTime.Now.ToString("dddd, dd/MM/yyyy · HH:mm", System.Globalization.CultureInfo.GetCultureInfo("vi-VN"));
 }
@@ -27,7 +27,7 @@
                 <span aria-hidden="true">＋</span> Mở bán hàng
             </a>
         }
-        @if (canUseKitchen)
+        @if (canViewKitchenQueue)
         {
             <a asp-controller="Kitchen" asp-action="Queue" class="btn btn-dashboard-secondary">
                 Xem hàng đợi bếp <span aria-hidden="true">→</span>
@@ -41,7 +41,7 @@
         <h2>Các khu vực làm việc</h2>
         <p>Truy cập nhanh các chức năng theo quyền tài khoản.</p>
     </div>
-    <span class="module-count">@( (isManagement ? 4 : 0) + 3 + (canTakeOrders ? 1 : 0) + (canUseKitchen ? 1 : 0) + (canTakePayment ? 1 : 0) ) khu vực</span>
+    <span class="module-count">@((isManagement ? 4 : 0) + 3 + (canTakeOrders ? 1 : 0) + (canViewKitchenQueue ? 1 : 0) + (canTakePayment ? 1 : 0) + (User.IsInRole("ADMIN") ? 1 : 0)) khu vực</span>
 </div>
 
 <div class="row g-3 dashboard-grid">
@@ -112,6 +112,16 @@
                 </article>
             </a>
         </div>
+        <div class="col-sm-6 col-xl-4">
+            <a asp-controller="BankTransferSettings" asp-action="Index" class="dashboard-card-link">
+                <article class="dashboard-card">
+                    <div class="dashboard-card-top"><span class="module-icon icon-payment">QR</span><span class="module-arrow">↗</span></div>
+                    <h3>Tài khoản nhận chuyển khoản</h3>
+                    <p>Cấu hình ngân hàng nhận tiền và thông tin tạo mã VietQR.</p>
+                    <span class="module-label">THANH TOÁN</span>
+                </article>
+            </a>
+        </div>
     }
 
     @if (canTakeOrders)
@@ -127,7 +137,7 @@
             </a>
         </div>
     }
-    @if (canUseKitchen)
+    @if (canViewKitchenQueue)
     {
         <div class="col-sm-6 col-xl-4">
             <a asp-controller="Kitchen" asp-action="Queue" class="dashboard-card-link">

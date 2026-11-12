@@ -113,6 +113,40 @@
                         <option value="1">Chuyển khoản</option>
                     </select>
                 </div>
+                <section id="transfer-qr-panel" class="border rounded-3 bg-light p-3 mb-3" hidden>
+                    @if (Model.Bank.IsConfigured)
+                    {
+                        <div class="text-center">
+                            <h2 class="h6 mb-1">Quét mã để chuyển khoản</h2>
+                            <p class="small text-muted mb-2">Kiểm tra đúng số tiền và nội dung trước khi xác nhận.</p>
+                            <img id="transfer-qr-image"
+                                 class="img-fluid bg-white border rounded p-2 mb-2"
+                                 style="width: 220px; height: 220px"
+                                 alt="Mã QR thanh toán VietQR" />
+                            <div class="small">
+                                <div><strong>@Model.Bank.BankName</strong></div>
+                                <div>STK: <span class="font-monospace">@Model.Bank.AccountNumber</span></div>
+                                <div>Chủ TK: @Model.Bank.AccountName</div>
+                                @if (!string.IsNullOrWhiteSpace(Model.Bank.Branch))
+                                {
+                                    <div>Chi nhánh: @Model.Bank.Branch</div>
+                                }
+                            </div>
+                            <div id="transfer-qr-error" class="alert alert-danger small mt-2 mb-0" hidden>
+                                Không tạo được mã QR. Kiểm tra cấu hình tài khoản ngân hàng.
+                            </div>
+                        </div>
+                        <div class="alert alert-warning small mt-3 mb-0">
+                            Thu ngân cần xác nhận đã nhận tiền trong ứng dụng ngân hàng trước khi hoàn tất thanh toán.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-0">
+                            Chưa cấu hình tài khoản nhận tiền. Vui lòng liên hệ ADMIN; không xác nhận chuyển khoản khi chưa kiểm tra giao dịch.
+                        </div>
+                    }
+                </section>
                 <div class="mb-3">
                     <label for="Note" class="form-label">Ghi chú thanh toán</label>
                     <input id="Note" name="Note" maxlength="255" class="form-control" value="@Model.Form.Note" />
@@ -148,7 +182,38 @@
             input.addEventListener("input", () => {
                 const discount = Math.min(subtotal, Math.max(0, Number(input.value) || 0));
                 total.textContent = `${formatter.format(subtotal - discount)} đ`;
+                updateTransferQr();
             });
         })();
     </script>
 }
+<script>
+    (() => {
+        const method = document.getElementById("Method");
+        const panel = document.getElementById("transfer-qr-panel");
+        const image = document.getElementById("transfer-qr-image");
+        const error = document.getElementById("transfer-qr-error");
+        const discount = document.getElementById("DiscountAmount");
+        const bankConfigured = @Model.Bank.IsConfigured.ToString().ToLowerInvariant();
+        const qrUrl = '@Url.Action("TransferQr", "Payments", new { invoiceId = Model.Invoice.InvoiceId })';
+
+        window.updateTransferQr = () => {
+            const showQr = method.value === "1";
+            panel.hidden = !showQr;
+            if (!showQr || !bankConfigured) {
+                return;
+            }
+
+            error.hidden = true;
+            const query = new URLSearchParams({
+                discountAmount: discount ? discount.value || "0" : "0",
+                refresh: Date.now().toString()
+            });
+            image.src = `${qrUrl}&${query.toString()}`;
+        };
+
+        image?.addEventListener("error", () => { error.hidden = false; });
+        method.addEventListener("change", window.updateTransferQr);
+        window.updateTransferQr();
+    })();
+</script>

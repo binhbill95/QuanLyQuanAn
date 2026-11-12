@@ -22,10 +22,13 @@ public sealed class OrderService : IOrderService
     public async Task<IReadOnlyList<ActiveTableOrderDto>> GetTablesAsync(
         CancellationToken cancellationToken = default)
     {
-        var statusRows = await _db.VwDiningTableStatuses
-            .AsNoTracking()
-            .OrderBy(t => t.AreaName)
-            .ThenBy(t => t.TableNumber)
+        var statusRows = await (
+                from status in _db.VwDiningTableStatuses.AsNoTracking()
+                join table in _db.DiningTables.AsNoTracking() on status.TableId equals table.Id
+                orderby table.Area == null || table.Area.IsDeleted ? int.MaxValue : table.Area.DisplayOrder,
+                    status.AreaName,
+                    status.TableNumber
+                select status)
             .ToListAsync(cancellationToken);
 
         var invoiceIds = statusRows

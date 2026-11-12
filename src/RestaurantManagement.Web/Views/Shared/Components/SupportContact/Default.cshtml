@@ -1,0 +1,37 @@
+@model RestaurantManagement.Application.Models.Settings.SupportContactSettingsDto
+@{
+    var dialNumber = new string(Model.HotlineNumber.Where(char.IsDigit).ToArray());
+    if (Model.HotlineNumber.TrimStart().StartsWith("+", StringComparison.Ordinal))
+    {
+        dialNumber = $"+{dialNumber}";
+    }
+}
+
+<details class="support-contact">
+    <summary class="support-contact-trigger">
+        <span class="support-contact-icon" aria-hidden="true">?</span>
+        <span>Hỗ trợ</span>
+    </summary>
+    <div class="support-contact-panel" aria-label="Kênh liên hệ hỗ trợ">
+        <div class="support-contact-heading">Bạn cần hỗ trợ?</div>
+        @if (Model.HasHotline)
+        {
+            <a class="support-contact-link support-contact-hotline" href="tel:@dialNumber">
+                <span class="support-contact-icon" aria-hidden="true">☎</span>
+                <span>Gọi hotline <small>@Model.HotlineNumber</small></span>
+            </a>
+        }
+        @if (Model.HasZalo)
+        {
+            <a class="support-contact-link support-contact-zalo" href="@Model.ZaloUrl"
+               target="_blank" rel="noopener noreferrer">
+                <span class="support-contact-icon" aria-hidden="true">Z</span>
+                <span>Chat qua Zalo</span>
+            </a>
+        }
+        @if (!Model.HasHotline && !Model.HasZalo)
+        {
+            <p class="support-contact-empty mb-0">Thông tin liên hệ hỗ trợ chưa được cập nhật.</p>
+        }
+    </div>
+</details>

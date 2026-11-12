@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RestaurantManagement.Application.Abstractions;
 using RestaurantManagement.Application.Models.Payments;
 using RestaurantManagement.Web.Models;
+using RestaurantManagement.Web.Services;
 
 namespace RestaurantManagement.Web.Controllers;
 
@@ -11,11 +12,16 @@ public class PaymentsController : Controller
 {
     private readonly IOrderService _orderService;
     private readonly IPaymentService _paymentService;
+    private readonly IBankTransferSettingsService _bankSettingsService;
 
-    public PaymentsController(IOrderService orderService, IPaymentService paymentService)
+    public PaymentsController(
+        IOrderService orderService,
+        IPaymentService paymentService,
+        IBankTransferSettingsService bankSettingsService)
     {
         _orderService = orderService;
         _paymentService = paymentService;
+        _bankSettingsService = bankSettingsService;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -41,7 +47,66 @@ public class PaymentsController : Controller
             Invoice = invoice,
             Form = new PaymentFormViewModel { InvoiceId = invoice.InvoiceId },
             CanApplyDiscount = User.IsInRole("MANAGER"),
+            Bank = await _bankSettingsService.GetAsync(cancellationToken),
         });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TransferQr(
+        int invoiceId,
+        decimal discountAmount = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var invoice = await _paymentService.GetCheckoutAsync(invoiceId, cancellationToken);
+        if (invoice is null)
+        {
+            return NotFound();
+        }
+
+        if (discountAmount < 0 ||
+            discountAmount > invoice.Subtotal ||
+            (discountAmount > 0 && !User.IsInRole("MANAGER")))
+        {
+            return BadRequest();
+        }
+
+        var amount = invoice.Subtotal - discountAmount;
+        if (amount <= 0)
+        {
+            return BadRequest();
+        }
+
+        var bank = await _bankSettingsService.GetAsync(cancellationToken);
+        if (!bank.IsConfigured)
+        {
+            return Conflict("Thông tin tài khoản ngân hàng chưa được cấu hình.");
+        }
+
+        return File(
+            VietQrCodeGenerator.CreatePng(bank, amount, invoice.InvoiceCode),
+            "image/png");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ReceiptTransferQr(
+        int invoiceId,
+        CancellationToken cancellationToken = default)
+    {
+        var receipt = await _paymentService.GetReceiptAsync(invoiceId, cancellationToken);
+        if (receipt is null || receipt.Method != 1)
+        {
+            return NotFound();
+        }
+
+        var bank = await _bankSettingsService.GetAsync(cancellationToken);
+        if (!bank.IsConfigured)
+        {
+            return NotFound();
+        }
+
+        return File(
+            VietQrCodeGenerator.CreatePng(bank, receipt.AmountPaid, receipt.InvoiceCode),
+            "image/png");
     }
 
     [HttpPost]
@@ -86,6 +151,15 @@ public class PaymentsController : Controller
         CancellationToken cancellationToken = default)
     {
         var receipt = await _paymentService.GetReceiptAsync(invoiceId, cancellationToken);
-        return receipt is null ? NotFound() : View(receipt);
+        if (receipt is null)
+        {
+            return NotFound();
+        }
+
+        return View(new PaymentReceiptViewModel
+        {
+            Receipt = receipt,
+            Bank = await _bankSettingsService.GetAsync(cancellationToken),
+        });
     }
 }

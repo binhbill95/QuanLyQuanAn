@@ -1,0 +1,54 @@
+@model SupportContactSettingsViewModel
+@{
+    ViewData["Title"] = "Cài đặt liên hệ hỗ trợ";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Cài đặt liên hệ hỗ trợ</h1>
+        <p class="text-muted mb-0">Thông tin hotline và Zalo sẽ hiển thị trên các trang của hệ thống.</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form asp-action="Index" method="post" class="card shadow-sm">
+            <div class="card-body p-4">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <div class="mb-3">
+                    <label asp-for="HotlineNumber" class="form-label"></label>
+                    <input asp-for="HotlineNumber" class="form-control" type="tel" autocomplete="tel"
+                           placeholder="Ví dụ: 090 123 4567" />
+                    <span asp-validation-for="HotlineNumber" class="text-danger"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="ZaloUrl" class="form-label"></label>
+                    <input asp-for="ZaloUrl" class="form-control" type="url" autocomplete="url"
+                           placeholder="https://zalo.me/84901234567" />
+                    <span asp-validation-for="ZaloUrl" class="text-danger"></span>
+                    <div class="form-text">Nhập liên kết Zalo cá nhân hoặc OA bắt đầu bằng https://zalo.me/.</div>
+                </div>
+                <button type="submit" class="btn btn-primary">Lưu thông tin liên hệ</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-5">
+        <aside class="card border-0 bg-light h-100">
+            <div class="card-body p-4">
+                <h2 class="h5">Thông tin hiển thị</h2>
+                <p class="small text-muted mb-0">
+                    Các nút gọi hotline và chat Zalo xuất hiện ở góc dưới bên phải. Để trống kênh nào thì nút của kênh đó sẽ được ẩn.
+                </p>
+            </div>
+        </aside>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

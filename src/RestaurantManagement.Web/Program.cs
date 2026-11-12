@@ -73,6 +73,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Management", policy => policy.RequireRole("ADMIN", "OWNER", "MANAGER"));
     options.AddPolicy("Cashier", policy => policy.RequireRole("ADMIN", "OWNER", "MANAGER", "CASHIER"));
     options.AddPolicy("Kitchen", policy => policy.RequireRole("ADMIN", "OWNER", "MANAGER", "KITCHEN"));
+    options.AddPolicy("KitchenQueueView", policy =>
+        policy.RequireRole("ADMIN", "OWNER", "MANAGER", "KITCHEN", "CASHIER"));
     options.AddPolicy("PaymentManagement", policy =>
         policy.RequireRole("MANAGER", "CASHIER"));
     options.AddPolicy("OrderManagement", policy =>

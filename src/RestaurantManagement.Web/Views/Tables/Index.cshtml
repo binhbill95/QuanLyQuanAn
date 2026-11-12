@@ -40,47 +40,55 @@
 }
 else
 {
-    <div class="row g-3">
-        @foreach (var table in Model.Tables)
-        {
-            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
-                <article class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start gap-2">
-                            <h2 class="h5 mb-0">@table.TableNumber</h2>
-                            <span class="badge @(statusStyles.TryGetValue(table.StatusName, out var style) ? style : "bg-secondary")">
-                                @table.StatusName
-                            </span>
-                        </div>
-                        <div class="small text-muted mt-2">@(table.AreaName ?? "Chưa phân khu")</div>
-                        <div class="small">@table.MaxSeats chỗ</div>
-                    </div>
-                    @if (Model.CanManage)
-                    {
-                        <div class="card-footer bg-white d-flex flex-wrap gap-2">
-                            <a asp-action="Edit" asp-route-id="@table.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
-                            @if (table.IsActive)
-                            {
-                                <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
-                                    <input type="hidden" name="isActive" value="false" />
-                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Ngừng</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
-                                    <input type="hidden" name="isActive" value="true" />
-                                    <button type="submit" class="btn btn-sm btn-outline-success">Kích hoạt</button>
-                                </form>
-                            }
-                            <form asp-action="Delete" asp-route-id="@table.Id" method="post"
-                                  onsubmit="return confirm('Xóa mềm bàn này?');">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
-                            </form>
-                        </div>
-                    }
-                </article>
+    @foreach (var areaGroup in Model.Tables.GroupBy(table => table.AreaName ?? "Chưa phân khu"))
+    {
+        <section class="mb-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h2 class="h5 mb-0">@areaGroup.Key</h2>
+                <span class="badge rounded-pill bg-light text-dark">@areaGroup.Count() bàn</span>
             </div>
-        }
-    </div>
+            <div class="row g-3">
+                @foreach (var table in areaGroup)
+                {
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <article class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <h3 class="h5 mb-0">@table.TableNumber</h3>
+                                    <span class="badge @(statusStyles.TryGetValue(table.StatusName, out var style) ? style : "bg-secondary")">
+                                        @table.StatusName
+                                    </span>
+                                </div>
+                                <div class="small text-muted mt-2">@table.MaxSeats chỗ</div>
+                            </div>
+                            @if (Model.CanManage)
+                            {
+                                <div class="card-footer bg-white d-flex flex-wrap gap-2">
+                                    <a asp-action="Edit" asp-route-id="@table.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    @if (table.IsActive)
+                                    {
+                                        <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
+                                            <input type="hidden" name="isActive" value="false" />
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Ngừng</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ToggleActive" asp-route-id="@table.Id" method="post">
+                                            <input type="hidden" name="isActive" value="true" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Kích hoạt</button>
+                                        </form>
+                                    }
+                                    <form asp-action="Delete" asp-route-id="@table.Id" method="post"
+                                          onsubmit="return confirm('Xóa mềm bàn này?');">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                                    </form>
+                                </div>
+                            }
+                        </article>
+                    </div>
+                }
+            </div>
+        </section>
+    }
 }

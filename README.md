@@ -21,7 +21,7 @@
 | Báo cáo | Doanh thu, món bán, khách theo ca/nhân viên/bàn và lương |
 | Nhật ký thao tác | Tra cứu thay đổi dữ liệu và lịch sử chuyển/gộp bàn |
 
-Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điểm gọi, không cho gọi món hết hoặc thuộc nhóm đã ngừng, chỉ hủy món còn chờ bếp, kiểm tra sức chứa khi mở/chuyển/gộp bàn, giữ số khách theo từng bàn và giải phóng bàn cùng giao dịch thanh toán. Món bị xóa khỏi thực đơn được xóa mềm; quản lý có thể khôi phục món vào nhóm đang hoạt động.
+Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điểm gọi, không cho gọi món hết hoặc thuộc nhóm đã ngừng, chỉ hủy món còn chờ bếp, kiểm tra sức chứa khi mở/chuyển/gộp bàn, giữ số khách theo từng bàn và giải phóng bàn cùng giao dịch thanh toán. Thanh toán chuyển khoản hỗ trợ VietQR tạo tại máy chủ từ cấu hình ngân hàng; thu ngân vẫn phải kiểm tra giao dịch và xác nhận thủ công. Món bị xóa khỏi thực đơn được xóa mềm; quản lý có thể khôi phục món vào nhóm đang hoạt động.
 
 ## Yêu cầu
 
@@ -99,20 +99,23 @@ Database seed sẵn các tài khoản:
 | `admin` | `Admin@123` | Quản trị hệ thống |
 | `manager` | `Admin@123` | Quản lý quán |
 | `sale` | `Admin@123` | Phục vụ — mở bàn và gọi món |
+| `thungan` | `Admin@123` | Thu ngân — thanh toán và in hóa đơn |
 | `bep` | `Admin@123` | Bếp — nhận món và cập nhật trạng thái |
 
 Đây là thông tin đăng nhập **chỉ dành cho database demo cục bộ**. Đổi mật khẩu sau khi đăng nhập; không dùng các tài khoản này cho môi trường triển khai thật. Script seed tạo lại các tài khoản demo khi khởi tạo database mới.
 
-Tài khoản `sale` có quyền phục vụ nhưng không có quyền thanh toán; dùng `manager` để demo thanh toán.
+Tài khoản `sale` có quyền phục vụ nhưng không có quyền thanh toán; dùng `thungan` (CASHIER) hoặc `manager` để demo thanh toán.
 
 ## Gợi ý kiểm tra khi chấm đồ án
 
 1. Đăng nhập `manager` để xem **Bán hàng (POS)**: thực đơn, bàn, gọi món và thao tác quản lý theo quyền.
 2. Mở một bàn trống, gọi một món; kiểm tra món xuất hiện trong hàng đợi bếp.
 3. Đăng nhập `admin` hoặc dùng một tài khoản có vai trò `KITCHEN` để nhận món và đánh dấu hoàn thành.
-4. Thanh toán bằng tài khoản `manager`; sau thanh toán, kiểm tra bàn được giải phóng và biên nhận được tạo.
+4. Thanh toán bằng tài khoản `thungan` hoặc `manager`; sau thanh toán, kiểm tra bàn được giải phóng và biên nhận được tạo.
 5. Mở **Báo cáo** để xem doanh thu/món bán, và **Nhật ký thao tác** để tra cứu thay đổi.
 6. Các màn hình nhân sự, ca làm, lịch ca, chấm công và duyệt công dành cho quản lý; quyền chi tiết được mô tả trong `docs/03_UserRoles.md`.
+
+Trước khi thử thanh toán QR, đăng nhập `admin` → **Quản lý** → **Tài khoản nhận chuyển khoản** và nhập mã BIN 6 số, tên ngân hàng, số tài khoản và tên chủ tài khoản. QR chứa số tiền và mã hóa đơn; không tự xác nhận tiền đã vào ngân hàng.
 
 Trạng thái dữ liệu thay đổi khi chạy thử được lưu trong database Docker. Nếu cần database sạch, lệnh dưới sẽ **xóa volume và toàn bộ dữ liệu**; chỉ chạy khi chấp nhận mất dữ liệu hiện có:
 

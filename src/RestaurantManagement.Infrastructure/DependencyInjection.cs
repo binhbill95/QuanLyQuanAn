@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using RestaurantManagement.Application.Abstractions;
 using RestaurantManagement.Domain.Entities;
@@ -15,6 +16,7 @@ using RestaurantManagement.Infrastructure.Shifts;
 using RestaurantManagement.Infrastructure.Tables;
 using RestaurantManagement.Infrastructure.Orders;
 using RestaurantManagement.Infrastructure.Payments;
+using RestaurantManagement.Infrastructure.Settings;
 using RestaurantManagement.Infrastructure.Reporting;
 using RestaurantManagement.Infrastructure.Auditing;
 
@@ -45,6 +47,7 @@ public static class DependencyInjection
                 sql.MigrationsAssembly(typeof(RestaurantDbContext).Assembly.FullName);
                 sql.EnableRetryOnFailure(maxRetryCount: 3);
             });
+            services.AddMemoryCache();
         });
 
         // ASP.NET Identity password hashing (PBKDF2-HMAC-SHA512), dùng chung với dữ liệu seed trong database/02_seed.sql
@@ -76,6 +79,8 @@ public static class DependencyInjection
 
         // Thanh toán và đóng hóa đơn
         services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IBankTransferSettingsService, BankTransferSettingsService>();
+        services.AddScoped<ISupportContactSettingsService, SupportContactSettingsService>();
 
         // Báo cáo doanh thu, khách, món bán và công/lương
         services.AddScoped<IReportingService, ReportingService>();

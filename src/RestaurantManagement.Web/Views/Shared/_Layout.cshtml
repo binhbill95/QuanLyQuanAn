@@ -30,8 +30,8 @@
                             </li>
                             var canUseOrders = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER") ||
                                 User.IsInRole("WAITER") || User.IsInRole("CASHIER");
-                            var canUseKitchen = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER") ||
-                                User.IsInRole("KITCHEN");
+                            var canViewKitchenQueue = User.IsInRole("ADMIN") || User.IsInRole("OWNER") ||
+                                User.IsInRole("MANAGER") || User.IsInRole("KITCHEN") || User.IsInRole("CASHIER");
                             var canManage = User.IsInRole("ADMIN") || User.IsInRole("OWNER") || User.IsInRole("MANAGER");
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -48,7 +48,7 @@
                                     {
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Payments" asp-action="Index">Thanh toán</a></li>
                                     }
-                                    @if (canUseKitchen)
+                                    @if (canViewKitchenQueue)
                                     {
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Kitchen" asp-action="Queue">Bếp</a></li>
                                     }
@@ -73,6 +73,18 @@
                                         }
                                         <li><hr class="dropdown-divider" /></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Attendance" asp-action="Index">Chấm công</a></li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Cài đặt
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" asp-area="" asp-controller="SupportSettings" asp-action="Index">Liên hệ hỗ trợ</a></li>
+                                        @if (User.IsInRole("ADMIN"))
+                                        {
+                                            <li><a class="dropdown-item" asp-area="" asp-controller="BankTransferSettings" asp-action="Index">Tài khoản nhận chuyển khoản</a></li>
+                                        }
                                     </ul>
                                 </li>
                             }
@@ -129,6 +141,7 @@
             <span class="footer-caption">VẬN HÀNH NHÀ HÀNG THÔNG MINH</span>
         </div>
     </footer>
+    @await Component.InvokeAsync("SupportContact")
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

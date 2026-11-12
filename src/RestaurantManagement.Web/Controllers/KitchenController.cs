@@ -4,7 +4,7 @@ using RestaurantManagement.Application.Abstractions;
 
 namespace RestaurantManagement.Web.Controllers;
 
-[Authorize(Policy = "Kitchen")]
+[Authorize(Policy = "KitchenQueueView")]
 public class KitchenController : Controller
 {
     private readonly IOrderService _orderService;
@@ -18,6 +18,7 @@ public class KitchenController : Controller
         => View(await _orderService.GetKitchenQueueAsync(cancellationToken));
 
     [HttpPost]
+    [Authorize(Policy = "Kitchen")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetStatus(
         int detailId,

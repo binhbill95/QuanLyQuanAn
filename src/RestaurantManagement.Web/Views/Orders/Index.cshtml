@@ -1,6 +1,8 @@
 @model OrderIndexViewModel
 @{
     ViewData["Title"] = "Gọi món";
+    var canViewKitchenQueue = User.IsInRole("ADMIN") || User.IsInRole("OWNER") ||
+        User.IsInRole("MANAGER") || User.IsInRole("KITCHEN") || User.IsInRole("CASHIER");
     var statusClasses = new Dictionary<byte, string>
     {
         [0] = "bg-warning text-dark",
@@ -22,7 +24,10 @@
         <h1 class="h3 mb-0">Gọi món</h1>
         <p class="text-muted mb-0">Chọn bàn để mở hóa đơn hoặc xem lượt phục vụ đang diễn ra.</p>
     </div>
-    <a asp-controller="Kitchen" asp-action="Queue" class="btn btn-outline-primary">Hàng đợi bếp</a>
+    @if (canViewKitchenQueue)
+    {
+        <a asp-controller="Kitchen" asp-action="Queue" class="btn btn-outline-primary">Hàng đợi bếp</a>
+    }
 </div>
 @if (TempData["SuccessMessage"] is string successMessage)
 {
@@ -33,36 +38,45 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
-<div class="row g-2 mb-4">
-    @foreach (var table in Model.Tables)
+    @foreach (var areaGroup in Model.Tables.GroupBy(table => table.AreaName ?? "Chưa phân khu"))
     {
-        var isSelected = Model.SelectedTableId == table.TableId;
-        var statusClass = table.StatusName switch
-        {
-            "Trống" => "border-success",
-            "Có khách" => "border-primary",
-            "Đang đợi món" => "border-warning",
-            "Món đã xong" => "border-info",
-            _ => "border-secondary",
-        };
-        <div class="col-6 col-md-4 col-lg-3 col-xl-2">
-            <a asp-action="Index" asp-route-tableId="@table.TableId"
-               class="card h-100 text-decoration-none text-reset @statusClass @(isSelected ? "shadow border-2" : "")">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <span class="fw-semibold">@table.TableNumber</span>
-                        <span class="badge @(table.StatusName == "Trống" ? "bg-success" : "bg-secondary")">@table.StatusName</span>
-                    </div>
-                    <div class="small text-muted mt-1">@(table.AreaName ?? "Chưa phân khu") · @table.MaxSeats chỗ</div>
-                    @if (table.InvoiceCode is not null)
+        <section class="mb-4">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h2 class="h5 mb-0">@areaGroup.Key</h2>
+                <span class="badge rounded-pill bg-light text-dark">@areaGroup.Count() bàn</span>
+            </div>
+            <div class="row g-2">
+                @foreach (var table in areaGroup)
+                {
+                    var isSelected = Model.SelectedTableId == table.TableId;
+                    var statusClass = table.StatusName switch
                     {
-                        <div class="small mt-1">@table.InvoiceCode</div>
-                    }
-                </div>
-            </a>
-        </div>
+                        "Trống" => "border-success",
+                        "Có khách" => "border-primary",
+                        "Đang đợi món" => "border-warning",
+                        "Món đã xong" => "border-info",
+                        _ => "border-secondary",
+                    };
+                    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                        <a asp-action="Index" asp-route-tableId="@table.TableId"
+                           class="card h-100 text-decoration-none text-reset @statusClass @(isSelected ? "shadow border-2" : "")">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <span class="fw-semibold">@table.TableNumber</span>
+                                    <span class="badge @(table.StatusName == "Trống" ? "bg-success" : "bg-secondary")">@table.StatusName</span>
+                                </div>
+                                <div class="small text-muted mt-1">@table.MaxSeats chỗ</div>
+                                @if (table.InvoiceCode is not null)
+                                {
+                                    <div class="small mt-1">@table.InvoiceCode</div>
+                                }
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </section>
     }
-</div>
 
 @if (Model.Invoice is not null)
 {
