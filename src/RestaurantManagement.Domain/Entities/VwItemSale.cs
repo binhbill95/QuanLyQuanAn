@@ -11,6 +11,8 @@ public partial class VwItemSale
 
     public int? Month { get; set; }
 
+    public int BranchId { get; set; }
+
     public int MenuItemId { get; set; }
 
     public string ItemCode { get; set; } = null!;

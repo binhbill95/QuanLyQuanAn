@@ -13,10 +13,17 @@ public class EmployeesController : Controller
     private const int PageSize = 20;
 
     private readonly IEmployeeService _employeeService;
+    private readonly IBranchService _branchService;
+    private readonly ICurrentUserService _currentUser;
 
-    public EmployeesController(IEmployeeService employeeService)
+    public EmployeesController(
+        IEmployeeService employeeService,
+        IBranchService branchService,
+        ICurrentUserService currentUser)
     {
         _employeeService = employeeService;
+        _branchService = branchService;
+        _currentUser = currentUser;
     }
 
     public async Task<IActionResult> Index(
@@ -60,6 +67,7 @@ public class EmployeesController : Controller
         var model = new EmployeeFormViewModel
         {
             EmployeeCode = await _employeeService.SuggestEmployeeCodeAsync(cancellationToken),
+            BranchId = _currentUser.BranchId ?? 0,
             StartDate = DateOnly.FromDateTime(DateTime.Today),
             Status = 0,
         };
@@ -163,6 +171,7 @@ public class EmployeesController : Controller
     private async Task PopulateOptionsAsync(EmployeeFormViewModel model, CancellationToken cancellationToken)
     {
         var positions = await _employeeService.GetPositionsAsync(cancellationToken);
+        model.BranchOptions = await _branchService.GetOptionsAsync(cancellationToken);
 
         model.PositionOptions = positions
             .Select(p => new SelectListItem(
@@ -177,6 +186,7 @@ public class EmployeesController : Controller
         model.Gender,
         model.DateOfBirth,
         model.PositionId,
+        model.BranchId,
         model.Phone,
         model.Address,
         model.IdentityNumber,
@@ -193,6 +203,7 @@ public class EmployeesController : Controller
         Gender = input.Gender,
         DateOfBirth = input.DateOfBirth,
         PositionId = input.PositionId,
+        BranchId = input.BranchId,
         Phone = input.Phone,
         Address = input.Address,
         IdentityNumber = input.IdentityNumber,

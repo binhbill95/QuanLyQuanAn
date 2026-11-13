@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using RestaurantManagement.Application.Models.Accounts;
+using RestaurantManagement.Application.Models.Branches;
 
 namespace RestaurantManagement.Web.Models;
 
@@ -63,13 +64,21 @@ public sealed class AccountEditViewModel
 
     public string? EmployeeName { get; init; }
 
+    public int? EmployeeId { get; init; }
+
     public string RoleCode { get; init; } = string.Empty;
+
+    public int BranchId { get; set; }
+
+    public string? BranchName { get; init; }
 
     [Display(Name = "Vai trò")]
     [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn vai trò.")]
     public int RoleId { get; set; }
 
     public IReadOnlyList<AccountRoleOptionDto> Roles { get; set; } = [];
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; set; } = [];
 }
 
 public sealed class AccountResetPasswordViewModel

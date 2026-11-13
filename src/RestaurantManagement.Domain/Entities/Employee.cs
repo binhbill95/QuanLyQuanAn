@@ -17,6 +17,8 @@ public partial class Employee
 
     public int PositionId { get; set; }
 
+    public int BranchId { get; set; }
+
     public string? Phone { get; set; }
 
     public string? Address { get; set; }
@@ -48,6 +50,8 @@ public partial class Employee
     public byte[] RowVersion { get; set; } = null!;
 
     public virtual AppUser? AppUser { get; set; }
+
+    public virtual Branch Branch { get; set; } = null!;
 
     public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
 

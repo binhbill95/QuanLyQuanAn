@@ -9,6 +9,8 @@ public sealed record AccountListItemDto(
     int? EmployeeId,
     string? EmployeeCode,
     string? EmployeeName,
+    int? BranchId,
+    string? BranchName,
     bool IsActive,
     DateTime? LastLoginAt,
     DateTime CreatedAt);
@@ -22,6 +24,8 @@ public sealed record AccountDetailsDto(
     int? EmployeeId,
     string? EmployeeCode,
     string? EmployeeName,
+    int? BranchId,
+    string? BranchName,
     bool IsActive,
     DateTime? LastLoginAt,
     DateTime CreatedAt);
@@ -30,7 +34,8 @@ public sealed record AccountEmployeeOptionDto(
     int Id,
     string Code,
     string FullName,
-    string PositionName);
+    string PositionName,
+    string BranchName);
 
 public sealed record AccountRoleOptionDto(
     int Id,

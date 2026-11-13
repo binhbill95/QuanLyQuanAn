@@ -8,6 +8,17 @@
         <span asp-validation-for="TableNumber" class="text-danger"></span>
     </div>
     <div class="col-md-4">
+        <label asp-for="BranchId" class="form-label"></label>
+        <select asp-for="BranchId" class="form-select">
+            <option value="0">-- Chọn chi nhánh --</option>
+            @foreach (var branch in Model.Branches)
+            {
+                <option value="@branch.Id">@branch.Name</option>
+            }
+        </select>
+        <span asp-validation-for="BranchId" class="text-danger"></span>
+    </div>
+    <div class="col-md-4">
         <label asp-for="AreaId" class="form-label"></label>
         <select asp-for="AreaId" class="form-select">
             <option value="">-- Chưa phân khu --</option>

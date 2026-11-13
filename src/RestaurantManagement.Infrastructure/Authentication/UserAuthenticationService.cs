@@ -38,13 +38,14 @@ public sealed class UserAuthenticationService : IUserAuthenticationService
             .AsNoTracking()
             .Include(u => u.Role)
             .Include(u => u.Employee)
+            .Include(u => u.Branch)
             .FirstOrDefaultAsync(
                 u => u.Username == normalizedUsername && !u.IsDeleted,
                 cancellationToken);
 
         // Trả về null cho cả trường hợp không tồn tại / bị khóa / sai mật khẩu
         // để phía UI chỉ hiển thị một thông báo chung, không tiết lộ tài khoản có tồn tại hay không.
-        if (user is null || !user.IsActive)
+        if (user is null || !user.IsActive || (user.BranchId.HasValue && user.Branch?.IsActive != true))
         {
             return null;
         }
@@ -79,6 +80,8 @@ public sealed class UserAuthenticationService : IUserAuthenticationService
             user.Role.Name,
             user.EmployeeId,
             user.Employee?.FullName,
+            user.BranchId,
+            user.Branch?.Name,
             ToSecurityStamp(user.UpdatedAt));
     }
 
@@ -93,7 +96,10 @@ public sealed class UserAuthenticationService : IUserAuthenticationService
             {
                 u.IsActive,
                 u.UpdatedAt,
+                u.BranchId,
                 RoleCode = u.Role.Code,
+                BranchIsActive = u.BranchId == null ||
+                                 (u.Branch != null && !u.Branch.IsDeleted && u.Branch.IsActive),
                 EmployeeUsable = u.EmployeeId == null ||
                                  (u.Employee != null && !u.Employee.IsDeleted && u.Employee.Status == 0),
             })
@@ -107,6 +113,8 @@ public sealed class UserAuthenticationService : IUserAuthenticationService
         return new UserSessionState(
             state.IsActive && state.EmployeeUsable,
             state.RoleCode,
+            state.BranchId,
+            state.BranchIsActive,
             ToSecurityStamp(state.UpdatedAt));
     }
 

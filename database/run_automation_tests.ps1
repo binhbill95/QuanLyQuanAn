@@ -38,7 +38,7 @@ try {
         }
     }
 
-    foreach ($name in @('01_schema.sql', '02_seed.sql', '03_views.sql', '04_audit.sql', '05_rules.sql')) {
+    foreach ($name in @('01_schema.sql', '06_branch_management.sql', '02_seed.sql', '03_views.sql', '04_audit.sql', '05_rules.sql')) {
         $containerPath = "/tmp/$databaseName-$name"
         docker exec -e "SQL_FILE=$containerPath" $containerName /bin/sh -c 'SQLCMD=/opt/mssql-tools18/bin/sqlcmd; [ -x "$SQLCMD" ] || SQLCMD=/opt/mssql-tools/bin/sqlcmd; "$SQLCMD" -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -I -b -i "$SQL_FILE"'
         if ($LASTEXITCODE -ne 0) {

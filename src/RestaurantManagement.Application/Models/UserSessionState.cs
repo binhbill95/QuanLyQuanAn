@@ -8,4 +8,6 @@ namespace RestaurantManagement.Application.Models;
 public sealed record UserSessionState(
     bool IsActive,
     string? RoleCode,
+    int? BranchId,
+    bool BranchIsActive,
     long SecurityStamp);

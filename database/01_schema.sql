@@ -53,6 +53,31 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID(N'dbo.Branch', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.[Branch]
+    (
+        [Id]        int           IDENTITY(1,1) NOT NULL,
+        [Code]      varchar(20)   NOT NULL,
+        [Name]      nvarchar(100) NOT NULL,
+        [Address]   nvarchar(255) NULL,
+        [Phone]     nvarchar(20)  NULL,
+        [IsActive]  bit           NOT NULL CONSTRAINT DF_Branch_IsActive DEFAULT (1),
+
+        [CreatedAt] datetime2(0)  NOT NULL CONSTRAINT DF_Branch_CreatedAt DEFAULT (SYSUTCDATETIME()),
+        [CreatedBy] int           NULL,
+        [UpdatedAt] datetime2(0)  NULL,
+        [UpdatedBy] int           NULL,
+        [IsDeleted] bit           NOT NULL CONSTRAINT DF_Branch_IsDeleted DEFAULT (0),
+        [DeletedAt] datetime2(0)  NULL,
+        [RowVersion] rowversion   NOT NULL,
+
+        CONSTRAINT PK_Branch PRIMARY KEY CLUSTERED ([Id]),
+        CONSTRAINT UQ_Branch_Code UNIQUE ([Code])
+    );
+END
+GO
+
 IF OBJECT_ID(N'dbo.Permission', N'U') IS NULL
 BEGIN
     CREATE TABLE dbo.[Permission]
@@ -134,6 +159,7 @@ BEGIN
         [Gender]         tinyint        NULL,
         [DateOfBirth]    date           NULL,
         [PositionId]     int            NOT NULL,
+        [BranchId]       int            NOT NULL,
         [Phone]          nvarchar(20)   NULL,
         [Address]        nvarchar(255)  NULL,
         [IdentityNumber] varchar(20)    NOT NULL,
@@ -159,8 +185,10 @@ BEGIN
         CONSTRAINT CK_Employee_ShiftRate CHECK ([ShiftRate] IS NULL OR [ShiftRate] >= 0),
         CONSTRAINT CK_Employee_EndDate CHECK ([EndDate] IS NULL OR [EndDate] >= [StartDate]),
         CONSTRAINT CK_Employee_Resigned CHECK ([Status] <> 2 OR [EndDate] IS NOT NULL),
-        CONSTRAINT FK_Employee_Position FOREIGN KEY ([PositionId]) REFERENCES dbo.[Position] ([Id])
+        CONSTRAINT FK_Employee_Position FOREIGN KEY ([PositionId]) REFERENCES dbo.[Position] ([Id]),
+        CONSTRAINT FK_Employee_Branch FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id])
     );
+    CREATE INDEX IX_Employee_BranchId ON dbo.[Employee] ([BranchId]);
 END
 GO
 
@@ -173,6 +201,7 @@ BEGIN
         [PasswordHash] nvarchar(255)  NOT NULL,
         [RoleId]       int            NOT NULL,
         [EmployeeId]   int            NULL,
+        [BranchId]     int            NULL,
         [IsActive]     bit            NOT NULL CONSTRAINT DF_AppUser_IsActive DEFAULT (1),
         [LastLoginAt]  datetime2(0)   NULL,
 
@@ -187,7 +216,8 @@ BEGIN
         CONSTRAINT PK_AppUser PRIMARY KEY CLUSTERED ([Id]),
         CONSTRAINT UQ_AppUser_Username UNIQUE ([Username]),
         CONSTRAINT FK_AppUser_Role FOREIGN KEY ([RoleId]) REFERENCES dbo.[Role] ([Id]),
-        CONSTRAINT FK_AppUser_Employee FOREIGN KEY ([EmployeeId]) REFERENCES dbo.[Employee] ([Id]) ON DELETE SET NULL
+        CONSTRAINT FK_AppUser_Employee FOREIGN KEY ([EmployeeId]) REFERENCES dbo.[Employee] ([Id]) ON DELETE SET NULL,
+        CONSTRAINT FK_AppUser_Branch FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id])
     );
 
     CREATE UNIQUE INDEX UX_AppUser_EmployeeId ON dbo.[AppUser] ([EmployeeId]) WHERE [EmployeeId] IS NOT NULL;
@@ -429,6 +459,7 @@ BEGIN
     (
         [Id]          int          IDENTITY(1,1) NOT NULL,
         [TableNumber] nvarchar(10) NOT NULL,
+        [BranchId]    int          NOT NULL,
         [AreaId]      int          NULL,
         [MaxSeats]    int          NOT NULL,
         [IsActive]    bit          NOT NULL CONSTRAINT DF_DiningTable_IsActive DEFAULT (1),
@@ -442,10 +473,12 @@ BEGIN
         [RowVersion]  rowversion   NOT NULL,
 
         CONSTRAINT PK_DiningTable PRIMARY KEY CLUSTERED ([Id]),
-        CONSTRAINT UQ_DiningTable_TableNumber UNIQUE ([TableNumber]),
+        CONSTRAINT UQ_DiningTable_Branch_TableNumber UNIQUE ([BranchId], [TableNumber]),
         CONSTRAINT CK_DiningTable_MaxSeats CHECK ([MaxSeats] > 0),
-        CONSTRAINT FK_DiningTable_Area FOREIGN KEY ([AreaId]) REFERENCES dbo.[Area] ([Id]) ON DELETE SET NULL
+        CONSTRAINT FK_DiningTable_Area FOREIGN KEY ([AreaId]) REFERENCES dbo.[Area] ([Id]) ON DELETE SET NULL,
+        CONSTRAINT FK_DiningTable_Branch FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id])
     );
+    CREATE INDEX IX_DiningTable_BranchId ON dbo.[DiningTable] ([BranchId]);
 END
 GO
 
@@ -514,6 +547,7 @@ BEGIN
         [InvoiceCode]        varchar(20)    NOT NULL,
         [CustomerCount]      int            NOT NULL,
         [OpenedByEmployeeId] int            NOT NULL,
+        [BranchId]           int            NOT NULL,
         [OpenedAt]           datetime2(0)   NOT NULL CONSTRAINT DF_Invoice_OpenedAt DEFAULT (SYSUTCDATETIME()),
         [ClosedAt]           datetime2(0)   NULL,
         [ShiftId]            int            NULL,
@@ -537,12 +571,14 @@ BEGIN
         CONSTRAINT CK_Invoice_ClosedAt CHECK ([ClosedAt] IS NULL OR [ClosedAt] >= [OpenedAt]),
         CONSTRAINT CK_Invoice_PaidHasClosedAt CHECK ([Status] <> 1 OR [ClosedAt] IS NOT NULL),
         CONSTRAINT FK_Invoice_Employee FOREIGN KEY ([OpenedByEmployeeId]) REFERENCES dbo.[Employee] ([Id]),
+        CONSTRAINT FK_Invoice_Branch FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id]),
         CONSTRAINT FK_Invoice_Shift FOREIGN KEY ([ShiftId]) REFERENCES dbo.[Shift] ([Id])
     );
 
     CREATE INDEX IX_Invoice_Status_ClosedAt ON dbo.[Invoice] ([Status], [ClosedAt]);
     CREATE INDEX IX_Invoice_Employee_OpenedAt ON dbo.[Invoice] ([OpenedByEmployeeId], [OpenedAt]);
     CREATE INDEX IX_Invoice_Shift_ClosedAt ON dbo.[Invoice] ([ShiftId], [ClosedAt]);
+    CREATE INDEX IX_Invoice_BranchId ON dbo.[Invoice] ([BranchId]);
 END
 GO
 

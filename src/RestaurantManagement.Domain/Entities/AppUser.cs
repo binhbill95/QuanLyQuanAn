@@ -15,6 +15,8 @@ public partial class AppUser
 
     public int? EmployeeId { get; set; }
 
+    public int? BranchId { get; set; }
+
     public bool IsActive { get; set; }
 
     public DateTime? LastLoginAt { get; set; }
@@ -36,6 +38,8 @@ public partial class AppUser
     public virtual ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
 
     public virtual Employee? Employee { get; set; }
+
+    public virtual Branch? Branch { get; set; }
 
     public virtual Role Role { get; set; } = null!;
 }

@@ -165,6 +165,9 @@ public sealed class OrderService : IOrderService
     {
         return await _db.VwKitchenQueues
             .AsNoTracking()
+            .Where(queue => _db.Invoices.Any(invoice =>
+                invoice.Id == queue.InvoiceId &&
+                (_currentUser.BranchId == null || invoice.BranchId == _currentUser.BranchId)))
             .OrderBy(q => q.OrderedAt)
             .ThenBy(q => q.InvoiceDetailId)
             .Select(q => new KitchenQueueItemDto(
@@ -245,6 +248,7 @@ public sealed class OrderService : IOrderService
                     InvoiceCode = CreateInvoiceCode(),
                     CustomerCount = input.CustomerCount,
                     OpenedByEmployeeId = employeeId,
+                    BranchId = table.BranchId,
                     OpenedAt = now,
                     ShiftId = matchingShiftIds.Count == 1 ? matchingShiftIds[0] : null,
                     Status = 0,
@@ -526,15 +530,17 @@ public sealed class OrderService : IOrderService
             async token =>
             {
 
-                var invoiceIsOpen = await _db.Invoices.AnyAsync(
+                var invoice = await _db.Invoices.FirstOrDefaultAsync(
                     i => i.Id == invoiceId && i.Status == 0 && !i.IsDeleted,
                     token);
-                if (!invoiceIsOpen)
+                if (invoice is null)
                 {
                     return OperationResult<bool>.Failure("Hóa đơn không còn ở trạng thái phục vụ.");
                 }
 
-                var source = await _db.InvoiceTables.FirstOrDefaultAsync(
+                var source = await _db.InvoiceTables
+                    .Include(assignment => assignment.Table)
+                    .FirstOrDefaultAsync(
                     t => t.InvoiceId == invoiceId &&
                          t.TableId == fromTableId &&
                          t.ReleasedAt == null &&
@@ -545,12 +551,22 @@ public sealed class OrderService : IOrderService
                     return OperationResult<bool>.Failure("Bàn nguồn không thuộc hóa đơn đang phục vụ.");
                 }
 
+                if (source.Table.BranchId != invoice.BranchId)
+                {
+                    return OperationResult<bool>.Failure("Bàn nguồn không thuộc chi nhánh của hóa đơn.");
+                }
+
                 var targetTable = await _db.DiningTables.FirstOrDefaultAsync(
                     t => t.Id == toTableId && t.IsActive && !t.IsDeleted,
                     token);
                 if (targetTable is null)
                 {
                     return OperationResult<bool>.Failure("Bàn đích không tồn tại hoặc đã ngừng sử dụng.");
+                }
+
+                if (targetTable.BranchId != invoice.BranchId)
+                {
+                    return OperationResult<bool>.Failure("Không thể chuyển hóa đơn sang bàn ở chi nhánh khác.");
                 }
 
                 var targetOccupied = await _db.InvoiceTables.AnyAsync(
@@ -648,6 +664,10 @@ public sealed class OrderService : IOrderService
 
                 var target = invoices.Single(i => i.Id == targetInvoiceId);
                 var source = invoices.Single(i => i.Id == sourceInvoiceId);
+                if (target.BranchId != source.BranchId)
+                {
+                    return OperationResult<bool>.Failure("Không thể gộp hóa đơn thuộc hai chi nhánh khác nhau.");
+                }
 
                 var targetPrimaryTable = await _db.InvoiceTables
                     .Where(t => t.InvoiceId == targetInvoiceId && t.ReleasedAt == null && !t.IsDeleted)

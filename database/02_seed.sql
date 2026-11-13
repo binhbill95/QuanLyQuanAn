@@ -46,6 +46,16 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[Role] WHERE [Code] = 'KITCHEN')
     VALUES ('KITCHEN', N'Bếp',      N'Nhận món và cập nhật trạng thái', 0);
 GO
 
+/* ---------- 1.1. Chi nhánh --------------------------------------------------------- */
+IF NOT EXISTS (SELECT 1 FROM dbo.[Branch] WHERE [Code] = 'CN001')
+    INSERT INTO dbo.[Branch] ([Code], [Name], [Address], [Phone])
+    VALUES ('CN001', N'Chi nhánh chính', NULL, NULL);
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[Branch] WHERE [Code] = 'CN002')
+    INSERT INTO dbo.[Branch] ([Code], [Name], [Address], [Phone])
+    VALUES ('CN002', N'Chi nhánh 2', NULL, NULL);
+GO
+
 /* ---------- 2. Vị trí công việc ---------------------------------------------------- */
 IF NOT EXISTS (SELECT 1 FROM dbo.[Position] WHERE [Code] = 'WAITER')
     INSERT INTO dbo.[Position] ([Code], [Name], [DefaultRoleId], [DefaultShiftRate])
@@ -84,39 +94,44 @@ GO
 
 /* ---------- 5. Nhân viên ----------------------------------------------------------- */
 IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV001')
-    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
                                 [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
-    SELECT 'NV001', N'Nguyễn Văn An', 1, '1988-04-12', p.[Id],
+    SELECT 'NV001', N'Nguyễn Văn An', 1, '1988-04-12', p.[Id], b.[Id],
            '0901234567', N'12 Nguyễn Trãi, Quận 1, TP.HCM', '079088001234', '2024-01-05', 0, N'Nhân viên quản lý'
-    FROM dbo.[Position] p WHERE p.[Code] = 'MANAGER';
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'MANAGER' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV002')
-    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
                                 [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
-    SELECT 'NV002', N'Trần Thị Bình', 0, '1999-09-02', p.[Id],
+    SELECT 'NV002', N'Trần Thị Bình', 0, '1999-09-02', p.[Id], b.[Id],
            '0912345678', N'45 Lê Lợi, Quận 1, TP.HCM', '079199002345', '2024-03-01', 0, N'Phục vụ ca sáng'
-    FROM dbo.[Position] p WHERE p.[Code] = 'WAITER';
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'WAITER' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV003')
-    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
                                 [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
-    SELECT 'NV003', N'Lê Hoàng Cường', 1, '2000-12-21', p.[Id],
+    SELECT 'NV003', N'Lê Hoàng Cường', 1, '2000-12-21', p.[Id], b.[Id],
            '0923456789', N'78 Pasteur, Quận 3, TP.HCM', '079200003456', '2024-06-15', 0, N'Phục vụ ca chiều'
-    FROM dbo.[Position] p WHERE p.[Code] = 'WAITER';
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'WAITER' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV004')
-    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
                                 [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
-    SELECT 'NV004', N'Phạm Minh Dũng', 1, '1997-07-07', p.[Id],
+    SELECT 'NV004', N'Phạm Minh Dũng', 1, '1997-07-07', p.[Id], b.[Id],
            '0934567890', N'23 Võ Văn Tần, Quận 3, TP.HCM', '079197004567', '2024-08-20', 0, N'Pha chế'
-    FROM dbo.[Position] p WHERE p.[Code] = 'BARTENDER';
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'BARTENDER' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV005')
-    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId],
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
                                 [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
-    SELECT 'NV005', N'Nguyễn Thị Thu Ngân', 0, '2001-05-15', p.[Id],
+    SELECT 'NV005', N'Nguyễn Thị Thu Ngân', 0, '2001-05-15', p.[Id], b.[Id],
            '0945678901', N'10 Nguyễn Huệ, Quận 1, TP.HCM', '079201005678', '2025-01-10', 0, N'Thu ngân demo'
-    FROM dbo.[Position] p WHERE p.[Code] = 'RECEPTION';
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'RECEPTION' AND b.[Code] = 'CN001';
 GO
 
 /* ---------- 6. Tài khoản ----------------------------------------------------------- */
@@ -129,39 +144,43 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'admin')
     FROM dbo.[Role] r WHERE r.[Code] = 'ADMIN';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'manager')
-    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
     SELECT 'manager',
            'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
-           r.[Id], e.[Id], 1
+           r.[Id], e.[Id], b.[Id], 1
     FROM dbo.[Role] r
     CROSS JOIN dbo.[Employee] e
-    WHERE r.[Code] = 'MANAGER' AND e.[EmployeeCode] = 'NV001';
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'MANAGER' AND e.[EmployeeCode] = 'NV001' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'sale')
-    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
     SELECT 'sale',
            'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
-           r.[Id], e.[Id], 1
+           r.[Id], e.[Id], b.[Id], 1
     FROM dbo.[Role] r
     CROSS JOIN dbo.[Employee] e
-    WHERE r.[Code] = 'WAITER' AND e.[EmployeeCode] = 'NV002';
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'WAITER' AND e.[EmployeeCode] = 'NV002' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'bep')
-    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
     SELECT 'bep',
            'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
-           r.[Id], NULL, 1
+           r.[Id], NULL, b.[Id], 1
     FROM dbo.[Role] r
-    WHERE r.[Code] = 'KITCHEN';
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'KITCHEN' AND b.[Code] = 'CN001';
 
 IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'thungan')
-    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [IsActive])
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
     SELECT 'thungan',
            'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
-           r.[Id], e.[Id], 1
+           r.[Id], e.[Id], b.[Id], 1
     FROM dbo.[Role] r
     CROSS JOIN dbo.[Employee] e
-    WHERE r.[Code] = 'CASHIER' AND e.[EmployeeCode] = 'NV005';
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'CASHIER' AND e.[EmployeeCode] = 'NV005' AND b.[Code] = 'CN001';
 GO
 
 /* ---------- 7. Trình độ của nhân viên ---------------------------------------------- */
@@ -226,15 +245,19 @@ GO
 
 ;WITH TableSeed AS (
     SELECT * FROM (VALUES
-        ('B01', 4, N'Trệt'), ('B02', 4, N'Trệt'), ('B03', 2, N'Trệt'), ('B04', 6, N'Trệt'),
-        ('B05', 4, N'Lầu 1'), ('B06', 4, N'Lầu 1'), ('B07', 8, N'Lầu 1'),
-        ('B08', 4, N'Sân vườn'), ('B09', 6, N'Sân vườn'), ('B10', 10, N'Sân vườn')
-    ) AS v(TableNumber, MaxSeats, AreaName)
+        ('B01', 4, N'Trệt', 'CN001'), ('B02', 4, N'Trệt', 'CN001'),
+        ('B03', 2, N'Trệt', 'CN001'), ('B04', 6, N'Trệt', 'CN001'),
+        ('B05', 4, N'Lầu 1', 'CN001'), ('B06', 4, N'Lầu 1', 'CN001'),
+        ('B07', 8, N'Lầu 1', 'CN001'), ('B08', 4, N'Sân vườn', 'CN001'),
+        ('B09', 6, N'Sân vườn', 'CN001'), ('B10', 10, N'Sân vườn', 'CN001'),
+        ('B11', 4, N'Trệt', 'CN002')
+    ) AS v(TableNumber, MaxSeats, AreaName, BranchCode)
 )
-INSERT INTO dbo.[DiningTable] ([TableNumber], [AreaId], [MaxSeats])
-SELECT t.TableNumber, a.[Id], t.MaxSeats
+INSERT INTO dbo.[DiningTable] ([TableNumber], [BranchId], [AreaId], [MaxSeats])
+SELECT t.TableNumber, b.[Id], a.[Id], t.MaxSeats
 FROM TableSeed t
 JOIN dbo.[Area] a ON a.[Name] = t.AreaName
+JOIN dbo.[Branch] b ON b.[Code] = t.BranchCode
 WHERE NOT EXISTS (SELECT 1 FROM dbo.[DiningTable] dt WHERE dt.[TableNumber] = t.TableNumber);
 GO
 

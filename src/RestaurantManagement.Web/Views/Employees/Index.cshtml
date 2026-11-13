@@ -58,6 +58,7 @@
                 <th>Mã</th>
                 <th>Họ và tên</th>
                 <th>Vị trí</th>
+                <th>Chi nhánh</th>
                 <th>Điện thoại</th>
                 <th>Ngày vào làm</th>
                 <th>Trạng thái</th>
@@ -69,7 +70,7 @@
             @if (paging.Items.Count == 0)
             {
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">Không tìm thấy nhân viên nào.</td>
+                    <td colspan="9" class="text-center text-muted py-4">Không tìm thấy nhân viên nào.</td>
                 </tr>
             }
             else
@@ -84,6 +85,7 @@
                             </a>
                         </td>
                         <td>@employee.PositionName</td>
+                        <td>@employee.BranchName</td>
                         <td>@(employee.Phone ?? "—")</td>
                         <td>@employee.StartDate.ToString("dd/MM/yyyy")</td>
                         <td>

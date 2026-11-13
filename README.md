@@ -55,12 +55,13 @@ docker compose --env-file .\docker\.env -f .\docker\docker-compose.yml logs -f s
 Đợi log báo khởi tạo database hoàn tất, rồi nhấn `Ctrl+C` để thoát theo dõi log; container vẫn chạy nền. Trên lần khởi tạo đầu tiên, SQL Server chạy các script theo thứ tự:
 
 1. `database/01_schema.sql` — database, bảng và ràng buộc.
-2. `database/02_seed.sql` — dữ liệu mẫu.
-3. `database/03_views.sql` — các view báo cáo và vận hành.
+2. `database/02_seed.sql` — dữ liệu mẫu, gồm hai chi nhánh demo.
+3. `database/03_views.sql` — các view báo cáo và vận hành theo chi nhánh.
 4. `database/04_audit.sql` — trigger nhật ký thao tác.
 5. `database/05_rules.sql` — trigger quy tắc nghiệp vụ.
+6. `database/06_branch_management.sql` — backfill chi nhánh; idempotent.
 
-Database được lưu trong Docker volume để giữ dữ liệu giữa các lần chạy. Các script khởi tạo không chạy lại trên database đã tồn tại.
+Database được lưu trong Docker volume để giữ dữ liệu giữa các lần chạy. Các script khởi tạo không chạy lại trên database đã tồn tại. Với database cũ, sao lưu trước, chạy `06_branch_management.sql`, sau đó chạy lại `03_views.sql`.
 
 ### 3. Cấu hình kết nối ứng dụng
 
@@ -146,6 +147,8 @@ src/        Solution ASP.NET Core MVC, Clean Architecture và kiểm thử tích
 - `docs/26_DemoPresentation.pptx` — slide trình bày demo trước giảng viên.
 - `docs/26_DemoPresentation.docx` — kịch bản demo định dạng Word để in hoặc chỉnh sửa.
 - `docs/26_DemoPresentation.md` — kịch bản lời dẫn và chuẩn bị buổi demo.
+- `docs/28_ImplementationLog_2026-11-13_BranchManagement.md` — nhật ký triển khai quản lý chi nhánh và các sửa đổi liên quan.
+- `docs/29_BackendArchitecture_QA.md` — cẩm nang trả lời về kiến trúc backend, API và các phần chưa có giao diện.
 - `database/README.md` — thứ tự và nội dung SQL scripts.
 - `docker/README.md` — vận hành SQL Server bằng Docker.
 - `src/README.md` — cấu trúc solution và ghi chú kỹ thuật.

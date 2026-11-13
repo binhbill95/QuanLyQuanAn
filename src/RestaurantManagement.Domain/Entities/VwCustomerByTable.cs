@@ -11,6 +11,8 @@ public partial class VwCustomerByTable
 
     public int? Month { get; set; }
 
+    public int BranchId { get; set; }
+
     public int TableId { get; set; }
 
     public string TableNumber { get; set; } = null!;

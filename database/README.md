@@ -6,21 +6,22 @@ Thư mục chứa toàn bộ script CSDL cho **SQL Server 2022** (chạy trong D
 
 | Thứ tự | Tệp | Nội dung |
 |--------|-----|----------|
-| 1 | `01_schema.sql` | Tạo database `RestaurantManagement`, 25 bảng, PK/FK, CHECK, UNIQUE, INDEX |
-| 2 | `02_seed.sql` | Dữ liệu mẫu: 6 vai trò, 4 vị trí, 4 kỹ năng, 2 ca, 10 bàn, 14 món, tài khoản mẫu |
+| 1 | `01_schema.sql` | Tạo database `RestaurantManagement`, bảng, PK/FK, CHECK, UNIQUE, INDEX |
+| 2 | `02_seed.sql` | Dữ liệu mẫu: 6 vai trò, 2 chi nhánh, 4 vị trí, 4 kỹ năng, 2 ca, 11 bàn, 14 món, tài khoản mẫu |
 | 3 | `03_views.sql` | 10 view phục vụ trạng thái bàn, hàng đợi bếp, doanh thu, khách theo ca/nhân viên/bàn, bảng lương |
 | 4 | `04_audit.sql` | 10 trigger ghi `AuditLog` (tài khoản, nhân sự, danh mục/món, ca/lịch/chấm công, hóa đơn/thanh toán) |
 | 5 | `05_rules.sql` | 2 trigger ràng buộc nghiệp vụ: chỉ hủy món đang chờ; không thêm món vào hóa đơn đã thanh toán |
+| 6 | `06_branch_management.sql` | Bổ sung chi nhánh cho database đã có dữ liệu; idempotent, backfill sang `CN001` |
 
 ## Kiểm chứng đã chạy
 
-- 25 bảng, 10 view, 10 trigger audit + 2 trigger quy tắc nghiệp vụ, 33 khóa ngoại.
+- 26 bảng, 10 view, 10 trigger audit + 2 trigger quy tắc nghiệp vụ.
 - Luồng demo: mở bàn → gọi món → bếp xong → thanh toán → báo cáo → dọn dẹp.
 - Xem kết quả chi tiết tại `../docs/12_ImplementationLog.md`.
 
 ## Chạy tự động qua Docker
 
-Xem `../docker/README.md`. Container tự chạy 4 script trên **một lần duy nhất** khi database chưa tồn tại.
+Xem `../docker/README.md`. Container tự khởi tạo schema, seed, view và trigger khi database chưa tồn tại.
 
 ## Kiểm thử nghiệp vụ tích hợp
 
@@ -33,7 +34,11 @@ sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 01_schema.sq
 sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 02_seed.sql
 sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 03_views.sql
 sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 04_audit.sql
+sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 05_rules.sql
+sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 06_branch_management.sql
 ```
+
+Với database cũ chưa có chi nhánh, sao lưu trước rồi chạy `06_branch_management.sql`, sau đó chạy lại `03_views.sql` (view có thêm cột `BranchId`). Script tạo `CN001`/`CN002`, gán dữ liệu hiện có về `CN001`, rồi bổ sung khóa ngoại. Chi nhánh được lưu trên tài khoản, bàn và hóa đơn; thực đơn/giá vẫn dùng chung.
 
 ## Tài khoản mẫu
 

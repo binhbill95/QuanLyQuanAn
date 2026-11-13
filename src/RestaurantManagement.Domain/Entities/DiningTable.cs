@@ -11,6 +11,8 @@ public partial class DiningTable
 
     public int? AreaId { get; set; }
 
+    public int BranchId { get; set; }
+
     public int MaxSeats { get; set; }
 
     public bool IsActive { get; set; }
@@ -30,6 +32,8 @@ public partial class DiningTable
     public byte[] RowVersion { get; set; } = null!;
 
     public virtual Area? Area { get; set; }
+
+    public virtual Branch Branch { get; set; } = null!;
 
     public virtual ICollection<InvoiceTable> InvoiceTables { get; set; } = new List<InvoiceTable>();
 

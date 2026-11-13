@@ -33,7 +33,7 @@ else
                             @foreach (var employee in Model.Employees)
                             {
                                 <option value="@employee.Id">
-                                    @employee.Code – @employee.FullName (@employee.PositionName)
+                                    @employee.Code – @employee.FullName (@employee.PositionName · @employee.BranchName)
                                 </option>
                             }
                         </select>
@@ -72,6 +72,7 @@ else
                 </div>
 
                 <p class="text-muted small mt-3 mb-0">
+                    Tài khoản thuộc chi nhánh của hồ sơ nhân viên được chọn.
                     Mật khẩu tối thiểu 6 ký tự. Tài khoản có hiệu lực ngay sau khi tạo.
                 </p>
 

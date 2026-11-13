@@ -142,6 +142,16 @@ public class AccountController : Controller
             claims.Add(new Claim("employee_id", user.EmployeeId.Value.ToString()));
         }
 
+        if (user.BranchId.HasValue)
+        {
+            claims.Add(new Claim("branch_id", user.BranchId.Value.ToString()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(user.BranchName))
+        {
+            claims.Add(new Claim("branch_name", user.BranchName));
+        }
+
         if (!string.IsNullOrWhiteSpace(user.FullName))
         {
             claims.Add(new Claim(ClaimTypes.GivenName, user.FullName));

@@ -58,6 +58,7 @@ builder.Services
 
                 if (state is null ||
                     !state.IsActive ||
+                    !state.BranchIsActive ||
                     !string.Equals(state.RoleCode, roleCode, StringComparison.Ordinal) ||
                     !string.Equals(state.SecurityStamp.ToString(), securityStamp, StringComparison.Ordinal))
                 {

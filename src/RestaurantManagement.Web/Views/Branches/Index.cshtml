@@ -1,0 +1,74 @@
+@model IReadOnlyList<RestaurantManagement.Application.Models.Branches.BranchDto>
+@{
+    ViewData["Title"] = "Chi nhánh";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-0">Chi nhánh</h1>
+        <p class="text-muted mb-0">Quản lý các cơ sở; thực đơn và giá bán được dùng chung.</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">+ Thêm chi nhánh</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (TempData["ErrorMessage"] is string errorMessage)
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Mã</th>
+                <th>Chi nhánh</th>
+                <th>Liên hệ</th>
+                <th>Tài khoản</th>
+                <th>Bàn</th>
+                <th>Trạng thái</th>
+                <th class="text-end">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Chưa có chi nhánh nào.</td></tr>
+            }
+            else
+            {
+                @foreach (var branch in Model)
+                {
+                    <tr>
+                        <td><code>@branch.Code</code></td>
+                        <td>
+                            <div class="fw-semibold">@branch.Name</div>
+                            @if (!string.IsNullOrWhiteSpace(branch.Address))
+                            {
+                                <div class="text-muted small">@branch.Address</div>
+                            }
+                        </td>
+                        <td>@(branch.Phone ?? "—")</td>
+                        <td>@branch.AccountCount</td>
+                        <td>@branch.TableCount</td>
+                        <td>
+                            <span class="badge @(branch.IsActive ? "bg-success" : "bg-secondary")">
+                                @(branch.IsActive ? "Đang hoạt động" : "Ngừng hoạt động")
+                            </span>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a asp-action="Edit" asp-route-id="@branch.Id" class="btn btn-sm btn-outline-primary">Sửa</a>
+                            <form asp-action="Delete" asp-route-id="@branch.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xóa mềm chi nhánh này?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

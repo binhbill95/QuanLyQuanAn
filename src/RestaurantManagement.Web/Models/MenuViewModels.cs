@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using RestaurantManagement.Application.Models.Menu;
+using RestaurantManagement.Application.Models.Branches;
 using RestaurantManagement.Application.Models.Tables;
 
 namespace RestaurantManagement.Web.Models;
@@ -113,6 +114,10 @@ public sealed class DiningTableFormViewModel
         ErrorMessage = "Số bàn chỉ gồm chữ cái, chữ số, dấu gạch dưới hoặc gạch ngang.")]
     public string TableNumber { get; set; } = string.Empty;
 
+    [Display(Name = "Chi nhánh")]
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn chi nhánh.")]
+    public int BranchId { get; set; }
+
     [Display(Name = "Khu vực")]
     public int? AreaId { get; set; }
 
@@ -124,6 +129,8 @@ public sealed class DiningTableFormViewModel
     public bool IsActive { get; set; } = true;
 
     public IReadOnlyList<AreaOptionDto> Areas { get; set; } = [];
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; set; } = [];
 }
 
 public sealed class AreaFormViewModel

@@ -61,6 +61,7 @@
                 <th>Tên đăng nhập</th>
                 <th>Nhân viên</th>
                 <th>Vai trò</th>
+                <th>Chi nhánh</th>
                 <th>Trạng thái</th>
                 <th>Đăng nhập cuối</th>
                 <th class="text-end">Thao tác</th>
@@ -70,7 +71,7 @@
             @if (Model.Accounts.Count == 0)
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">Không tìm thấy tài khoản nào.</td>
+                    <td colspan="7" class="text-center text-muted py-4">Không tìm thấy tài khoản nào.</td>
                 </tr>
             }
             else
@@ -97,6 +98,7 @@
                             <span class="badge bg-secondary">@account.RoleName</span>
                             <div class="text-muted small">@account.RoleCode</div>
                         </td>
+                        <td>@(account.BranchName ?? "Toàn hệ thống")</td>
                         <td>
                             @if (account.IsActive)
                             {

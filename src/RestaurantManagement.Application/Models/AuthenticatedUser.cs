@@ -11,4 +11,6 @@ public sealed record AuthenticatedUser(
     string RoleName,
     int? EmployeeId,
     string? FullName,
+    int? BranchId,
+    string? BranchName,
     long SecurityStamp);

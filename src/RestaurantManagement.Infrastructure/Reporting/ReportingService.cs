@@ -8,8 +8,13 @@ namespace RestaurantManagement.Infrastructure.Reporting;
 public sealed class ReportingService : IReportingService
 {
     private readonly RestaurantDbContext _db;
+    private readonly ICurrentUserService _currentUser;
 
-    public ReportingService(RestaurantDbContext db) => _db = db;
+    public ReportingService(RestaurantDbContext db, ICurrentUserService currentUser)
+    {
+        _db = db;
+        _currentUser = currentUser;
+    }
 
     public async Task<ReportsDashboardDto> GetDashboardAsync(
         ReportFilter filter,
@@ -97,6 +102,16 @@ public sealed class ReportingService : IReportingService
         if (filter.EmployeeId.HasValue)
         {
             payrollQuery = payrollQuery.Where(row => row.EmployeeId == filter.EmployeeId);
+        }
+
+        if (_currentUser.BranchId is int branchId)
+        {
+            revenueQuery = revenueQuery.Where(row => row.BranchId == branchId);
+            shiftQuery = shiftQuery.Where(row => row.BranchId == branchId);
+            employeeQuery = employeeQuery.Where(row => row.BranchId == branchId);
+            tableQuery = tableQuery.Where(row => row.BranchId == branchId);
+            itemQuery = itemQuery.Where(row => row.BranchId == branchId);
+            payrollQuery = payrollQuery.Where(row => row.BranchId == branchId);
         }
 
         var revenue = await revenueQuery

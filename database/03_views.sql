@@ -117,13 +117,14 @@ AS
 SELECT YEAR(i.[ClosedAt])          AS [Year],
        DATEPART(QUARTER, i.[ClosedAt]) AS [Quarter],
        MONTH(i.[ClosedAt])         AS [Month],
+       i.[BranchId],
        COUNT(DISTINCT i.[Id])      AS [InvoiceCount],
        SUM(i.[CustomerCount])      AS [CustomerCount],
        SUM(s.[TotalAmount])        AS [Revenue]
 FROM dbo.[Invoice] i
 JOIN dbo.vw_InvoiceSummary s ON s.[InvoiceId] = i.[Id]
 WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
-GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]);
+GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]), i.[BranchId];
 GO
 
 /* -------------------------------------------------------------------------------------
@@ -134,6 +135,7 @@ AS
 SELECT YEAR(i.[ClosedAt])             AS [Year],
        DATEPART(QUARTER, i.[ClosedAt]) AS [Quarter],
        MONTH(i.[ClosedAt])            AS [Month],
+       i.[BranchId],
        s.[Id]                         AS [ShiftId],
        s.[Name]                       AS [ShiftName],
        COUNT(DISTINCT i.[Id])         AS [InvoiceCount],
@@ -141,7 +143,8 @@ SELECT YEAR(i.[ClosedAt])             AS [Year],
 FROM dbo.[Invoice] i
 JOIN dbo.[Shift] s ON s.[Id] = i.[ShiftId]
 WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
-GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]), s.[Id], s.[Name];
+GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]),
+         i.[BranchId], s.[Id], s.[Name];
 GO
 
 /* -------------------------------------------------------------------------------------
@@ -154,6 +157,7 @@ SELECT YEAR(DATEADD(day, 3 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[Cl
        DATEPART(ISO_WEEK, i.[ClosedAt])      AS [Week],
        DATEADD(day, 0 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
                CAST(i.[ClosedAt] AS date))   AS [WeekStartDate],
+       i.[BranchId],
        e.[Id]                                AS [EmployeeId],
        e.[EmployeeCode],
        e.[FullName],
@@ -167,7 +171,7 @@ GROUP BY YEAR(DATEADD(day, 3 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[
          DATEPART(ISO_WEEK, i.[ClosedAt]),
          DATEADD(day, 0 - DATEDIFF(day, CONVERT(date, '19000101'), CAST(i.[ClosedAt] AS date)) % 7,
                  CAST(i.[ClosedAt] AS date)),
-         e.[Id], e.[EmployeeCode], e.[FullName];
+         i.[BranchId], e.[Id], e.[EmployeeCode], e.[FullName];
 GO
 
 /* -------------------------------------------------------------------------------------
@@ -180,6 +184,7 @@ WITH InvoiceTableCustomer AS
     SELECT YEAR(i.[ClosedAt])             AS [Year],
            DATEPART(QUARTER, i.[ClosedAt]) AS [Quarter],
            MONTH(i.[ClosedAt])            AS [Month],
+           i.[BranchId],
            i.[Id]                         AS [InvoiceId],
            t.[Id]                         AS [TableId],
            t.[TableNumber],
@@ -190,17 +195,18 @@ WITH InvoiceTableCustomer AS
     WHERE i.[Status] = 1 AND i.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
       AND it.[CustomerCount] IS NOT NULL
     GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]),
-             i.[Id], t.[Id], t.[TableNumber]
+             i.[BranchId], i.[Id], t.[Id], t.[TableNumber]
 )
 SELECT [Year],
        [Quarter],
        [Month],
+       [BranchId],
        [TableId],
        [TableNumber],
        COUNT(*)                AS [InvoiceCount],
        SUM([CustomerCount])    AS [CustomerCount]
 FROM InvoiceTableCustomer
-GROUP BY [Year], [Quarter], [Month], [TableId], [TableNumber];
+GROUP BY [Year], [Quarter], [Month], [BranchId], [TableId], [TableNumber];
 GO
 
 /* -------------------------------------------------------------------------------------
@@ -211,6 +217,7 @@ AS
 SELECT YEAR(i.[ClosedAt])                  AS [Year],
        DATEPART(QUARTER, i.[ClosedAt])     AS [Quarter],
        MONTH(i.[ClosedAt])                 AS [Month],
+       i.[BranchId],
        m.[Id]                              AS [MenuItemId],
        m.[Code]                            AS [ItemCode],
        m.[Name]                            AS [ItemName],
@@ -222,7 +229,7 @@ JOIN dbo.[Invoice] i   ON i.[Id] = d.[InvoiceId] AND i.[Status] = 1 AND i.[IsDel
 JOIN dbo.[MenuItem] m  ON m.[Id] = d.[MenuItemId]
 JOIN dbo.[Category] c  ON c.[Id] = m.[CategoryId]
 WHERE d.[Status] <> 3 AND d.[IsDeleted] = 0 AND i.[ClosedAt] IS NOT NULL
-GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]),
+GROUP BY YEAR(i.[ClosedAt]), DATEPART(QUARTER, i.[ClosedAt]), MONTH(i.[ClosedAt]), i.[BranchId],
          m.[Id], m.[Code], m.[Name], c.[Name];
 GO
 
@@ -253,6 +260,7 @@ AS
 SELECT s.[Year],
        s.[Month],
        s.[EmployeeId],
+       e.[BranchId],
        s.[EmployeeCode],
        s.[FullName],
        p.[Name]                                                   AS [PositionName],

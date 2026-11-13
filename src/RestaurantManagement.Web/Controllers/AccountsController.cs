@@ -13,11 +13,16 @@ public class AccountsController : Controller
     private const string AdminRoleCode = "ADMIN";
 
     private readonly IAccountService _accountService;
+    private readonly IBranchService _branchService;
     private readonly ICurrentUserService _currentUser;
 
-    public AccountsController(IAccountService accountService, ICurrentUserService currentUser)
+    public AccountsController(
+        IAccountService accountService,
+        IBranchService branchService,
+        ICurrentUserService currentUser)
     {
         _accountService = accountService;
+        _branchService = branchService;
         _currentUser = currentUser;
     }
 
@@ -108,9 +113,13 @@ public class AccountsController : Controller
             Username = details.Username,
             EmployeeCode = details.EmployeeCode,
             EmployeeName = details.EmployeeName,
+            EmployeeId = details.EmployeeId,
             RoleCode = details.RoleCode,
             RoleId = details.RoleId,
+            BranchId = details.BranchId ?? 0,
+            BranchName = details.BranchName,
             Roles = await GetAssignableRolesAsync(cancellationToken),
+            Branches = await _branchService.GetOptionsAsync(cancellationToken),
         });
     }
 
@@ -122,13 +131,14 @@ public class AccountsController : Controller
         CancellationToken cancellationToken = default)
     {
         model.Roles = await GetAssignableRolesAsync(cancellationToken);
+        model.Branches = await _branchService.GetOptionsAsync(cancellationToken);
 
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
-        var result = await _accountService.UpdateRoleAsync(id, model.RoleId, cancellationToken);
+        var result = await _accountService.UpdateRoleAsync(id, model.RoleId, model.BranchId, cancellationToken);
 
         if (!result.Succeeded)
         {

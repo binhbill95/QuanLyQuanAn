@@ -95,6 +95,70 @@ public sealed class BusinessWorkflowTests
     }
 
     [SqlServerFact]
+    public async Task MoveTable_rejects_a_destination_in_another_branch()
+    {
+        await using var scenario = await TestScenario.CreateAsync();
+        var (invoice, sourceTable) = await scenario.CreateInvoiceAsync(2, 4);
+        var otherBranchId = await scenario.Db.Branches
+            .Where(branch => branch.Code == "CN002")
+            .Select(branch => branch.Id)
+            .SingleAsync();
+        var otherBranchTable = await scenario.CreateTableAsync(4, otherBranchId);
+
+        var result = await scenario.CreateOrderService().MoveTableAsync(
+            invoice.Id,
+            sourceTable.Id,
+            otherBranchTable.Id,
+            scenario.Employee.Id,
+            null);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("chi nhánh", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [SqlServerFact]
+    public async Task MergeInvoices_rejects_invoices_from_different_branches()
+    {
+        await using var scenario = await TestScenario.CreateAsync();
+        var (targetInvoice, _) = await scenario.CreateInvoiceAsync(2, 4);
+        var otherBranchId = await scenario.Db.Branches
+            .Where(branch => branch.Code == "CN002")
+            .Select(branch => branch.Id)
+            .SingleAsync();
+        var (sourceInvoice, _) = await scenario.CreateInvoiceAsync(2, 4, otherBranchId);
+
+        var result = await scenario.CreateOrderService().MergeInvoicesAsync(
+            targetInvoice.Id,
+            sourceInvoice.Id,
+            scenario.Employee.Id);
+
+        Assert.False(result.Succeeded);
+        Assert.Contains("chi nhánh", result.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [SqlServerFact]
+    public async Task Branch_scoped_queries_hide_other_branch_tables_and_invoices()
+    {
+        await using var scenario = await TestScenario.CreateAsync();
+        var (otherBranchInvoice, otherBranchTable) = await scenario.CreateInvoiceAsync(
+            2,
+            4,
+            await scenario.Db.Branches
+                .Where(branch => branch.Code == "CN002")
+                .Select(branch => branch.Id)
+                .SingleAsync());
+        var options = new DbContextOptionsBuilder<RestaurantDbContext>()
+            .UseSqlServer(scenario.Db.Database.GetConnectionString())
+            .Options;
+        await using var branchDb = new RestaurantDbContext(
+            options,
+            new TestScenario.TestCurrentUser(scenario.BranchId));
+
+        Assert.False(await branchDb.DiningTables.AnyAsync(table => table.Id == otherBranchTable.Id));
+        Assert.False(await branchDb.Invoices.AnyAsync(invoice => invoice.Id == otherBranchInvoice.Id));
+    }
+
+    [SqlServerFact]
     public async Task Customer_by_table_counts_an_invoice_once_after_returning_to_same_table()
     {
         await using var scenario = await TestScenario.CreateAsync();
@@ -260,6 +324,7 @@ public sealed class BusinessWorkflowTests
             InvoiceCode = scenario.NewInvoiceCode(),
             CustomerCount = 2,
             OpenedByEmployeeId = scenario.Employee.Id,
+            BranchId = scenario.BranchId,
             OpenedAt = closedAt.AddHours(-1),
             ClosedAt = closedAt,
             Status = 1,
@@ -289,6 +354,7 @@ internal sealed class TestScenario : IAsyncDisposable
     private readonly List<int> _shiftIds = [];
     private int? _employeeId;
     private int? _positionId;
+    private int _branchId;
 
     private TestScenario(RestaurantDbContext db, TestCurrentUser currentUser)
     {
@@ -299,6 +365,7 @@ internal sealed class TestScenario : IAsyncDisposable
     public RestaurantDbContext Db { get; }
 
     public Employee Employee { get; private set; } = null!;
+    public int BranchId => _branchId;
 
     public static async Task<TestScenario> CreateAsync()
     {
@@ -317,6 +384,10 @@ internal sealed class TestScenario : IAsyncDisposable
             .Options;
         var db = new RestaurantDbContext(options, currentUser);
         var scenario = new TestScenario(db, currentUser);
+        scenario._branchId = await db.Branches
+            .Where(branch => branch.Code == "CN001")
+            .Select(branch => branch.Id)
+            .SingleAsync();
 
         var position = new Position
         {
@@ -336,6 +407,7 @@ internal sealed class TestScenario : IAsyncDisposable
             FullName = "Automation Test",
             IdentityNumber = Guid.NewGuid().ToString("N")[..20],
             PositionId = position.Id,
+            BranchId = scenario._branchId,
             StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
             Status = 1,
             CreatedAt = DateTime.UtcNow,
@@ -365,11 +437,12 @@ internal sealed class TestScenario : IAsyncDisposable
 
     public void TrackAttendance(int id) => _attendanceIds.Add(id);
 
-    public async Task<DiningTable> CreateTableAsync(int maxSeats)
+    public async Task<DiningTable> CreateTableAsync(int maxSeats, int? branchId = null)
     {
         var table = new DiningTable
         {
             TableNumber = $"T{Guid.NewGuid():N}"[..10],
+            BranchId = branchId ?? _branchId,
             MaxSeats = maxSeats,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
@@ -382,14 +455,17 @@ internal sealed class TestScenario : IAsyncDisposable
 
     public async Task<(Invoice Invoice, DiningTable Table)> CreateInvoiceAsync(
         int customerCount,
-        int maxSeats)
+        int maxSeats,
+        int? branchId = null)
     {
-        var table = await CreateTableAsync(maxSeats);
+        var invoiceBranchId = branchId ?? _branchId;
+        var table = await CreateTableAsync(maxSeats, invoiceBranchId);
         var invoice = new Invoice
         {
             InvoiceCode = NewInvoiceCode(),
             CustomerCount = customerCount,
             OpenedByEmployeeId = Employee.Id,
+            BranchId = invoiceBranchId,
             OpenedAt = DateTime.UtcNow,
             Status = 0,
             CreatedAt = DateTime.UtcNow,
@@ -482,12 +558,16 @@ internal sealed class TestScenario : IAsyncDisposable
             $"DELETE dbo.AuditLog WHERE TableName = {tableName} AND RecordId = {recordIdText}");
     }
 
-    private sealed class TestCurrentUser : ICurrentUserService
+    internal sealed class TestCurrentUser : ICurrentUserService
     {
+        public TestCurrentUser(int? branchId = null) => BranchId = branchId;
+
         public int? UserId => null;
         public string? UserName => "automation-test";
         public string? RoleCode => "ADMIN";
         public int? EmployeeId => null;
+        public int? BranchId { get; }
+        public string? BranchName => null;
         public bool IsAuthenticated => true;
     }
 }

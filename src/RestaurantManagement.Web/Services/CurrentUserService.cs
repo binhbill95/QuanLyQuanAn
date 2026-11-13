@@ -37,5 +37,16 @@ public sealed class CurrentUserService : ICurrentUserService
         }
     }
 
+    public int? BranchId
+    {
+        get
+        {
+            var value = _httpContextAccessor.HttpContext?.User.FindFirstValue("branch_id");
+            return int.TryParse(value, out var id) ? id : null;
+        }
+    }
+
+    public string? BranchName => _httpContextAccessor.HttpContext?.User.FindFirstValue("branch_name");
+
     public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 }

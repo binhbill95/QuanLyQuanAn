@@ -11,6 +11,8 @@ public partial class VwPayroll
 
     public int EmployeeId { get; set; }
 
+    public int BranchId { get; set; }
+
     public string EmployeeCode { get; set; } = null!;
 
     public string FullName { get; set; } = null!;

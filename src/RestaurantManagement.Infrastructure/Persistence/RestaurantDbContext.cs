@@ -12,6 +12,7 @@ namespace RestaurantManagement.Infrastructure.Persistence;
 public partial class RestaurantDbContext : DbContext
 {
     private readonly ICurrentUserService? _currentUser;
+    private int? CurrentBranchId => _currentUser?.BranchId;
 
     public RestaurantDbContext(DbContextOptions<RestaurantDbContext> options)
         : base(options)
@@ -137,6 +138,8 @@ public partial class RestaurantDbContext : DbContext
 
     public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
+    public virtual DbSet<Branch> Branches { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<DiningTable> DiningTables { get; set; }
@@ -203,6 +206,25 @@ public partial class RestaurantDbContext : DbContext
     {
         modelBuilder.UseCollation("Vietnamese_CI_AS");
 
+        modelBuilder.Entity<Branch>(entity =>
+        {
+            entity.ToTable("Branch");
+
+            entity.HasIndex(e => e.Code, "UQ_Branch_Code").IsUnique();
+
+            entity.Property(e => e.Code).HasMaxLength(20).IsUnicode(false);
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Address).HasMaxLength(255);
+            entity.Property(e => e.Phone).HasMaxLength(20);
+            entity.Property(e => e.CreatedAt)
+                .HasPrecision(0)
+                .HasDefaultValueSql("(sysutcdatetime())", "DF_Branch_CreatedAt");
+            entity.Property(e => e.DeletedAt).HasPrecision(0);
+            entity.Property(e => e.IsActive).HasDefaultValue(true, "DF_Branch_IsActive");
+            entity.Property(e => e.RowVersion).IsRowVersion().IsConcurrencyToken();
+            entity.Property(e => e.UpdatedAt).HasPrecision(0);
+        });
+
         modelBuilder.Entity<AppUser>(entity =>
         {
             entity.ToTable("AppUser", tb => tb.HasTrigger("trg_AppUser_Audit"));
@@ -231,6 +253,11 @@ public partial class RestaurantDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_AppUser_Employee");
 
+            entity.HasOne(d => d.Branch).WithMany(p => p.AppUsers)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_AppUser_Branch");
+
             entity.HasOne(d => d.Role).WithMany(p => p.AppUsers)
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -258,6 +285,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<Attendance>(entity =>
         {
             entity.ToTable("Attendance", tb => tb.HasTrigger("trg_Attendance_Audit"));
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Schedule.Employee.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => new { e.Status, e.ApprovedAt }, "IX_Attendance_Status_ApprovedAt");
 
@@ -335,7 +364,9 @@ public partial class RestaurantDbContext : DbContext
         {
             entity.ToTable("DiningTable");
 
-            entity.HasIndex(e => e.TableNumber, "UQ_DiningTable_TableNumber").IsUnique();
+            entity.HasIndex(e => new { e.BranchId, e.TableNumber }, "UQ_DiningTable_Branch_TableNumber").IsUnique();
+            entity.HasIndex(e => e.BranchId, "IX_DiningTable_BranchId");
+            entity.HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
 
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -352,6 +383,11 @@ public partial class RestaurantDbContext : DbContext
                 .HasForeignKey(d => d.AreaId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_DiningTable_Area");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.DiningTables)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_DiningTable_Branch");
         });
 
         modelBuilder.Entity<Employee>(entity =>
@@ -361,6 +397,8 @@ public partial class RestaurantDbContext : DbContext
             entity.HasIndex(e => e.EmployeeCode, "UQ_Employee_Code").IsUnique();
 
             entity.HasIndex(e => e.IdentityNumber, "UQ_Employee_IdentityNumber").IsUnique();
+            entity.HasIndex(e => e.BranchId, "IX_Employee_BranchId");
+            entity.HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
 
             entity.Property(e => e.Address).HasMaxLength(255);
             entity.Property(e => e.CreatedAt)
@@ -386,6 +424,11 @@ public partial class RestaurantDbContext : DbContext
                 .HasForeignKey(d => d.PositionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Employee_Position");
+
+            entity.HasOne(d => d.Branch).WithMany(p => p.Employees)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Employee_Branch");
         });
 
         modelBuilder.Entity<EmployeeShift>(entity =>
@@ -393,6 +436,8 @@ public partial class RestaurantDbContext : DbContext
             entity.HasKey(e => new { e.EmployeeId, e.ShiftId });
 
             entity.ToTable("EmployeeShift");
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Employee.BranchId == CurrentBranchId);
 
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -414,6 +459,8 @@ public partial class RestaurantDbContext : DbContext
             entity.HasKey(e => new { e.EmployeeId, e.SkillId });
 
             entity.ToTable("EmployeeSkill");
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Employee.BranchId == CurrentBranchId);
 
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -435,6 +482,8 @@ public partial class RestaurantDbContext : DbContext
             entity.ToTable("Invoice", tb => tb.HasTrigger("trg_Invoice_Audit"));
 
             entity.HasIndex(e => new { e.OpenedByEmployeeId, e.OpenedAt }, "IX_Invoice_Employee_OpenedAt");
+            entity.HasIndex(e => e.BranchId, "IX_Invoice_BranchId");
+            entity.HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => new { e.ShiftId, e.ClosedAt }, "IX_Invoice_Shift_ClosedAt");
 
@@ -465,6 +514,11 @@ public partial class RestaurantDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Invoice_Employee");
 
+            entity.HasOne(d => d.Branch).WithMany(p => p.Invoices)
+                .HasForeignKey(d => d.BranchId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Invoice_Branch");
+
             entity.HasOne(d => d.Shift).WithMany(p => p.Invoices)
                 .HasForeignKey(d => d.ShiftId)
                 .HasConstraintName("FK_Invoice_Shift");
@@ -478,6 +532,8 @@ public partial class RestaurantDbContext : DbContext
                     tb.HasTrigger("trg_InvoiceDetail_CancelGuard");
                     tb.HasTrigger("trg_InvoiceDetail_InvoiceStatusGuard");
                 });
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Invoice.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => new { e.InvoiceId, e.Status }, "IX_InvoiceDetail_Invoice_Status");
 
@@ -518,6 +574,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<InvoiceTable>(entity =>
         {
             entity.ToTable("InvoiceTable");
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Invoice.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => e.InvoiceId, "IX_InvoiceTable_Invoice");
 
@@ -585,6 +643,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.ToTable("Payment", tb => tb.HasTrigger("trg_Payment_Audit"));
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Invoice.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => new { e.Method, e.PaidAt }, "IX_Payment_Method_PaidAt");
 
@@ -712,6 +772,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<Schedule>(entity =>
         {
             entity.ToTable("Schedule", tb => tb.HasTrigger("trg_Schedule_Audit"));
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Employee.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => new { e.EmployeeId, e.WorkDate }, "IX_Schedule_Employee_WorkDate");
 
@@ -810,6 +872,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<TableTransferLog>(entity =>
         {
             entity.ToTable("TableTransferLog");
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Invoice.BranchId == CurrentBranchId);
 
             entity.HasIndex(e => e.InvoiceId, "IX_TableTransferLog_Invoice");
 
@@ -852,6 +916,8 @@ public partial class RestaurantDbContext : DbContext
         modelBuilder.Entity<UniformIssue>(entity =>
         {
             entity.ToTable("UniformIssue");
+            entity.HasQueryFilter(e =>
+                CurrentBranchId == null || e.Employee.BranchId == CurrentBranchId);
 
             entity.Property(e => e.CreatedAt)
                 .HasPrecision(0)
@@ -1002,6 +1068,7 @@ public partial class RestaurantDbContext : DbContext
             entity
                 .HasNoKey()
                 .ToView("vw_Payroll");
+            entity.HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
 
             entity.Property(e => e.EmployeeCode)
                 .HasMaxLength(20)

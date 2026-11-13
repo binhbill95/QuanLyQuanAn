@@ -11,6 +11,8 @@ public partial class VwRevenueByPeriod
 
     public int? Month { get; set; }
 
+    public int BranchId { get; set; }
+
     public int? InvoiceCount { get; set; }
 
     public int? CustomerCount { get; set; }

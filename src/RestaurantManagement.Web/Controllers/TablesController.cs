@@ -10,10 +10,17 @@ namespace RestaurantManagement.Web.Controllers;
 public class TablesController : Controller
 {
     private readonly ITableManagementService _tableService;
+    private readonly IBranchService _branchService;
+    private readonly ICurrentUserService _currentUser;
 
-    public TablesController(ITableManagementService tableService)
+    public TablesController(
+        ITableManagementService tableService,
+        IBranchService branchService,
+        ICurrentUserService currentUser)
     {
         _tableService = tableService;
+        _branchService = branchService;
+        _currentUser = currentUser;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
@@ -32,6 +39,8 @@ public class TablesController : Controller
         return View(new DiningTableFormViewModel
         {
             Areas = await _tableService.GetAreaOptionsAsync(cancellationToken),
+            Branches = await _branchService.GetOptionsAsync(cancellationToken),
+            BranchId = _currentUser.BranchId ?? 0,
         });
     }
 
@@ -49,7 +58,7 @@ public class TablesController : Controller
         }
 
         var result = await _tableService.CreateTableAsync(
-            new DiningTableInput(model.TableNumber, model.AreaId, model.MaxSeats, model.IsActive),
+            new DiningTableInput(model.TableNumber, model.BranchId, model.AreaId, model.MaxSeats, model.IsActive),
             cancellationToken);
 
         if (!result.Succeeded)
@@ -77,10 +86,12 @@ public class TablesController : Controller
         {
             Id = id,
             TableNumber = input.TableNumber,
+            BranchId = input.BranchId ?? 0,
             AreaId = input.AreaId,
             MaxSeats = input.MaxSeats,
             IsActive = input.IsActive,
             Areas = await _tableService.GetAreaOptionsAsync(cancellationToken),
+            Branches = await _branchService.GetOptionsAsync(cancellationToken),
         });
     }
 
@@ -101,7 +112,7 @@ public class TablesController : Controller
 
         var result = await _tableService.UpdateTableAsync(
             id,
-            new DiningTableInput(model.TableNumber, model.AreaId, model.MaxSeats, model.IsActive),
+            new DiningTableInput(model.TableNumber, model.BranchId, model.AreaId, model.MaxSeats, model.IsActive),
             cancellationToken);
 
         if (!result.Succeeded)
@@ -243,5 +254,10 @@ public class TablesController : Controller
     private async Task ReloadAreasAsync(DiningTableFormViewModel model, CancellationToken cancellationToken)
     {
         model.Areas = await _tableService.GetAreaOptionsAsync(cancellationToken);
+        model.Branches = await _branchService.GetOptionsAsync(cancellationToken);
+        if (_currentUser.BranchId.HasValue)
+        {
+            model.BranchId = _currentUser.BranchId.Value;
+        }
     }
 }

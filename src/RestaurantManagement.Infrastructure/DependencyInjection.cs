@@ -19,6 +19,7 @@ using RestaurantManagement.Infrastructure.Payments;
 using RestaurantManagement.Infrastructure.Settings;
 using RestaurantManagement.Infrastructure.Reporting;
 using RestaurantManagement.Infrastructure.Auditing;
+using RestaurantManagement.Infrastructure.Branches;
 
 namespace RestaurantManagement.Infrastructure;
 
@@ -66,6 +67,7 @@ public static class DependencyInjection
         services.AddScoped<IShiftService, ShiftService>();
         services.AddScoped<IScheduleService, ScheduleService>();
         services.AddScoped<IAttendanceService, AttendanceService>();
+        services.AddScoped<IBranchService, BranchService>();
 
         // Thực đơn
         services.AddScoped<ICategoryService, CategoryService>();

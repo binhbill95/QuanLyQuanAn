@@ -13,6 +13,8 @@ public partial class Invoice
 
     public int OpenedByEmployeeId { get; set; }
 
+    public int BranchId { get; set; }
+
     public DateTime OpenedAt { get; set; }
 
     public DateTime? ClosedAt { get; set; }
@@ -44,6 +46,8 @@ public partial class Invoice
     public virtual ICollection<InvoiceTable> InvoiceTables { get; set; } = new List<InvoiceTable>();
 
     public virtual Employee OpenedByEmployee { get; set; } = null!;
+
+    public virtual Branch Branch { get; set; } = null!;
 
     public virtual Payment? Payment { get; set; }
 

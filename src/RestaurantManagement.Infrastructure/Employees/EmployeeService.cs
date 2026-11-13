@@ -67,6 +67,7 @@ public sealed class EmployeeService : IEmployeeService
                 e.EmployeeCode,
                 e.FullName,
                 e.Position.Name,
+                e.Branch.Name,
                 e.Phone,
                 e.Status,
                 e.StartDate,
@@ -91,6 +92,8 @@ public sealed class EmployeeService : IEmployeeService
                 e.DateOfBirth,
                 e.PositionId,
                 e.Position.Name,
+                e.BranchId,
+                e.Branch.Name,
                 e.Phone,
                 e.Address,
                 e.IdentityNumber,
@@ -119,6 +122,7 @@ public sealed class EmployeeService : IEmployeeService
                 e.Gender,
                 e.DateOfBirth,
                 e.PositionId,
+                e.BranchId,
                 e.Phone,
                 e.Address,
                 e.IdentityNumber,
@@ -148,6 +152,7 @@ public sealed class EmployeeService : IEmployeeService
             Gender = input.Gender,
             DateOfBirth = input.DateOfBirth,
             PositionId = input.PositionId,
+            BranchId = input.BranchId,
             Phone = Clean(input.Phone),
             Address = Clean(input.Address),
             IdentityNumber = input.IdentityNumber.Trim(),
@@ -192,6 +197,7 @@ public sealed class EmployeeService : IEmployeeService
         employee.Gender = input.Gender;
         employee.DateOfBirth = input.DateOfBirth;
         employee.PositionId = input.PositionId;
+        employee.BranchId = input.BranchId;
         employee.Phone = Clean(input.Phone);
         employee.Address = Clean(input.Address);
         employee.IdentityNumber = input.IdentityNumber.Trim();
@@ -202,6 +208,13 @@ public sealed class EmployeeService : IEmployeeService
         employee.Note = Clean(input.Note);
         employee.UpdatedAt = DateTime.UtcNow;
         employee.UpdatedBy = _currentUser.UserId;
+
+        if (employee.AppUser is not null && employee.AppUser.BranchId != input.BranchId)
+        {
+            employee.AppUser.BranchId = input.BranchId;
+            employee.AppUser.UpdatedAt = DateTime.UtcNow;
+            employee.AppUser.UpdatedBy = _currentUser.UserId;
+        }
 
         // Nhân viên đã nghỉ thì khóa luôn tài khoản đăng nhập (nếu có).
         if (input.Status == StatusResigned && employee.AppUser is { IsActive: true })
@@ -306,6 +319,18 @@ public sealed class EmployeeService : IEmployeeService
         if (input.Status is > 2)
         {
             return "Trạng thái nhân viên không hợp lệ.";
+        }
+
+        if (_currentUser.BranchId.HasValue && input.BranchId != _currentUser.BranchId.Value)
+        {
+            return "Không thể gán nhân viên sang chi nhánh khác.";
+        }
+
+        if (!await _db.Branches.AnyAsync(
+                branch => branch.Id == input.BranchId && branch.IsActive && !branch.IsDeleted,
+                cancellationToken))
+        {
+            return "Chi nhánh không tồn tại hoặc đã ngừng hoạt động.";
         }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);

@@ -15,5 +15,9 @@ public interface ICurrentUserService
     /// <summary>Id hồ sơ nhân viên gắn với tài khoản (null với tài khoản ADMIN).</summary>
     int? EmployeeId { get; }
 
+    int? BranchId { get; }
+
+    string? BranchName { get; }
+
     bool IsAuthenticated { get; }
 }

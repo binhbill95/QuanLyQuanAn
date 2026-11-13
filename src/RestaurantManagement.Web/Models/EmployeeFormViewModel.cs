@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using RestaurantManagement.Application.Common;
+using RestaurantManagement.Application.Models.Branches;
 using RestaurantManagement.Application.Models.Employees;
 
 namespace RestaurantManagement.Web.Models;
@@ -49,6 +50,10 @@ public sealed class EmployeeFormViewModel
     [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn vị trí.")]
     public int PositionId { get; set; }
 
+    [Display(Name = "Chi nhánh")]
+    [Range(1, int.MaxValue, ErrorMessage = "Vui lòng chọn chi nhánh.")]
+    public int BranchId { get; set; }
+
     [Display(Name = "Điện thoại")]
     [StringLength(20, ErrorMessage = "Điện thoại tối đa 20 ký tự.")]
     [RegularExpression(@"^(0|\+84)\d{9,10}$", ErrorMessage = "Số điện thoại không hợp lệ (ví dụ 0901234567).")]
@@ -88,6 +93,8 @@ public sealed class EmployeeFormViewModel
     public string? Note { get; set; }
 
     public IReadOnlyList<SelectListItem> PositionOptions { get; set; } = [];
+
+    public IReadOnlyList<BranchOptionDto> BranchOptions { get; set; } = [];
 
     public static IReadOnlyList<SelectListItem> GenderOptions { get; } =
     [

@@ -152,6 +152,8 @@ public sealed class TableManagementService : ITableManagementService
             {
                 t.Id,
                 t.TableNumber,
+                t.BranchId,
+                BranchName = t.Branch.Name,
                 t.AreaId,
                 AreaName = t.Area == null || t.Area.IsDeleted ? null : t.Area.Name,
                 t.MaxSeats,
@@ -162,6 +164,8 @@ public sealed class TableManagementService : ITableManagementService
         return tables.Select(t => new DiningTableDto(
                 t.Id,
                 t.TableNumber,
+                t.BranchId,
+                t.BranchName,
                 t.AreaId,
                 t.AreaName,
                 t.MaxSeats,
@@ -175,7 +179,7 @@ public sealed class TableManagementService : ITableManagementService
         return await _db.DiningTables
             .AsNoTracking()
             .Where(t => t.Id == id && !t.IsDeleted)
-            .Select(t => new DiningTableInput(t.TableNumber, t.AreaId, t.MaxSeats, t.IsActive))
+            .Select(t => new DiningTableInput(t.TableNumber, t.BranchId, t.AreaId, t.MaxSeats, t.IsActive))
             .FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -192,6 +196,7 @@ public sealed class TableManagementService : ITableManagementService
         var table = new DiningTable
         {
             TableNumber = input.TableNumber.Trim().ToUpperInvariant(),
+            BranchId = _currentUser.BranchId ?? input.BranchId!.Value,
             AreaId = input.AreaId,
             MaxSeats = input.MaxSeats,
             IsActive = input.IsActive,
@@ -225,6 +230,7 @@ public sealed class TableManagementService : ITableManagementService
         if (isAssigned &&
             (!input.IsActive ||
              !string.Equals(table.TableNumber, input.TableNumber.Trim(), StringComparison.OrdinalIgnoreCase) ||
+             table.BranchId != (_currentUser.BranchId ?? input.BranchId) ||
              table.AreaId != input.AreaId ||
              table.MaxSeats != input.MaxSeats))
         {
@@ -232,6 +238,7 @@ public sealed class TableManagementService : ITableManagementService
         }
 
         table.TableNumber = input.TableNumber.Trim().ToUpperInvariant();
+        table.BranchId = _currentUser.BranchId ?? input.BranchId!.Value;
         table.AreaId = input.AreaId;
         table.MaxSeats = input.MaxSeats;
         table.IsActive = input.IsActive;
@@ -331,11 +338,33 @@ public sealed class TableManagementService : ITableManagementService
             return "Số chỗ ngồi phải từ 1 đến 100.";
         }
 
-        if (await _db.DiningTables.AnyAsync(
-                t => t.TableNumber == number.ToUpper() && (excludeId == null || t.Id != excludeId),
+        var branchId = _currentUser.BranchId ?? input.BranchId;
+        if (!branchId.HasValue)
+        {
+            return "Vui lòng chọn chi nhánh.";
+        }
+
+        if (_currentUser.BranchId.HasValue &&
+            input.BranchId.HasValue &&
+            input.BranchId != _currentUser.BranchId)
+        {
+            return "Không thể gán bàn sang chi nhánh khác.";
+        }
+
+        if (!await _db.Branches.AnyAsync(
+                branch => branch.Id == branchId.Value && branch.IsActive && !branch.IsDeleted,
                 cancellationToken))
         {
-            return $"Số bàn '{number}' đã tồn tại.";
+            return "Chi nhánh không tồn tại hoặc đã ngừng hoạt động.";
+        }
+
+        if (await _db.DiningTables.AnyAsync(
+                t => t.BranchId == branchId.Value &&
+                     t.TableNumber == number.ToUpper() &&
+                     (excludeId == null || t.Id != excludeId),
+                cancellationToken))
+        {
+            return $"Số bàn '{number}' đã tồn tại trong chi nhánh.";
         }
 
         if (input.AreaId.HasValue && !await _db.Areas.AnyAsync(

@@ -70,6 +70,7 @@
                                         @if (User.IsInRole("ADMIN"))
                                         {
                                             <li><a class="dropdown-item" asp-area="" asp-controller="Accounts" asp-action="Index">Tài khoản</a></li>
+                                            <li><a class="dropdown-item" asp-area="" asp-controller="Branches" asp-action="Index">Chi nhánh</a></li>
                                         }
                                         <li><hr class="dropdown-divider" /></li>
                                         <li><a class="dropdown-item" asp-area="" asp-controller="Attendance" asp-action="Index">Chấm công</a></li>
@@ -105,7 +106,7 @@
                                     <span class="user-avatar" aria-hidden="true">@((User.Identity?.Name ?? "?").Substring(0, 1).ToUpperInvariant())</span>
                                     <span class="user-chip-copy">
                                         <strong>@(User.Identity?.Name ?? "Người dùng")</strong>
-                                        <small>@roleName</small>
+                                        <small>@roleName@(User.FindFirst("branch_name")?.Value is string branchName ? $" · {branchName}" : string.Empty)</small>
                                     </span>
                                 </span>
                             </li>

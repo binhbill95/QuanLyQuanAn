@@ -33,6 +33,7 @@ public interface IAccountService
     Task<OperationResult<bool>> UpdateRoleAsync(
         int userId,
         int roleId,
+        int branchId,
         CancellationToken cancellationToken = default);
 
     Task<OperationResult<bool>> ResetPasswordAsync(

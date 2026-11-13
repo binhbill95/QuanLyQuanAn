@@ -45,8 +45,27 @@
                     <span asp-validation-for="RoleId" class="text-danger"></span>
                 </div>
 
-                <div class="col-md-7">
-                    <button type="submit" class="btn btn-primary">Lưu vai trò</button>
+                <div class="col-md-5">
+                    <label asp-for="BranchId" class="form-label">Chi nhánh</label>
+                    @if (Model.EmployeeId.HasValue)
+                    {
+                        <input class="form-control" value="@Model.BranchName" disabled />
+                        <div class="form-text">Chi nhánh được quản lý theo hồ sơ nhân viên.</div>
+                    }
+                    else
+                    {
+                        <select asp-for="BranchId" class="form-select">
+                            @foreach (var branch in Model.Branches)
+                            {
+                                <option value="@branch.Id">@branch.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="BranchId" class="text-danger"></span>
+                    }
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Lưu</button>
                     <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
                 </div>
             </div>

@@ -77,6 +77,8 @@ public sealed class AccountService : IAccountService
                 u.EmployeeId,
                 u.Employee != null ? u.Employee.EmployeeCode : null,
                 u.Employee != null ? u.Employee.FullName : null,
+                u.BranchId,
+                u.Branch != null ? u.Branch.Name : null,
                 u.IsActive,
                 u.LastLoginAt,
                 u.CreatedAt))
@@ -99,6 +101,8 @@ public sealed class AccountService : IAccountService
                 u.EmployeeId,
                 u.Employee != null ? u.Employee.EmployeeCode : null,
                 u.Employee != null ? u.Employee.FullName : null,
+                u.BranchId,
+                u.Branch != null ? u.Branch.Name : null,
                 u.IsActive,
                 u.LastLoginAt,
                 u.CreatedAt))
@@ -111,6 +115,7 @@ public sealed class AccountService : IAccountService
         return await _db.Employees
             .AsNoTracking()
             .Where(e => !e.IsDeleted && e.Status == 0)
+            .Where(e => e.Branch.IsActive && !e.Branch.IsDeleted)
             // UX_AppUser_EmployeeId áp dụng cả tài khoản đã xóa mềm.
             .Where(e => !_db.AppUsers.Any(u => u.EmployeeId == e.Id))
             .OrderBy(e => e.EmployeeCode)
@@ -118,7 +123,8 @@ public sealed class AccountService : IAccountService
                 e.Id,
                 e.EmployeeCode,
                 e.FullName,
-                e.Position.Name))
+                e.Position.Name,
+                e.Branch.Name))
             .ToListAsync(cancellationToken);
     }
 
@@ -197,6 +203,13 @@ public sealed class AccountService : IAccountService
                 "Không tạo tài khoản ADMIN qua màn hình này (ADMIN là tài khoản hệ thống).");
         }
 
+        if (!await _db.Branches.AnyAsync(
+                branch => branch.Id == employee.BranchId && branch.IsActive && !branch.IsDeleted,
+                cancellationToken))
+        {
+            return OperationResult<int>.Failure("Chi nhánh của nhân viên không tồn tại hoặc đã ngừng hoạt động.");
+        }
+
         // UQ_AppUser_Username áp dụng cả tài khoản đã xóa mềm.
         var usernameExists = await _db.AppUsers
             .AnyAsync(u => u.Username == username, cancellationToken);
@@ -211,6 +224,7 @@ public sealed class AccountService : IAccountService
             Username = username,
             RoleId = role.Id,
             EmployeeId = employee.Id,
+            BranchId = employee.BranchId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             CreatedBy = _currentUser.UserId,
@@ -227,6 +241,7 @@ public sealed class AccountService : IAccountService
     public async Task<OperationResult<bool>> UpdateRoleAsync(
         int userId,
         int roleId,
+        int branchId,
         CancellationToken cancellationToken = default)
     {
         var user = await _db.AppUsers
@@ -262,12 +277,36 @@ public sealed class AccountService : IAccountService
             return OperationResult<bool>.Failure("Không thể gán vai trò ADMIN qua màn hình này.");
         }
 
-        if (user.RoleId == role.Id)
+        var effectiveBranchId = user.EmployeeId.HasValue
+            ? await _db.Employees
+                .Where(employee => employee.Id == user.EmployeeId.Value && !employee.IsDeleted)
+                .Select(employee => (int?)employee.BranchId)
+                .FirstOrDefaultAsync(cancellationToken)
+            : branchId;
+        if (!effectiveBranchId.HasValue)
+        {
+            return OperationResult<bool>.Failure("Không tìm thấy nhân viên thuộc tài khoản.");
+        }
+
+        var branch = await _db.Branches
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                candidate => candidate.Id == effectiveBranchId.Value &&
+                             candidate.IsActive &&
+                             !candidate.IsDeleted,
+                cancellationToken);
+        if (branch is null)
+        {
+            return OperationResult<bool>.Failure("Chi nhánh không tồn tại hoặc đã ngừng hoạt động.");
+        }
+
+        if (user.RoleId == role.Id && user.BranchId == branch.Id)
         {
             return OperationResult<bool>.Success(true);
         }
 
         user.RoleId = role.Id;
+        user.BranchId = branch.Id;
         user.UpdatedAt = DateTime.UtcNow;
         user.UpdatedBy = _currentUser.UserId;
 

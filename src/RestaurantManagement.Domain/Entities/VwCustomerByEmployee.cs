@@ -11,6 +11,8 @@ public partial class VwCustomerByEmployee
 
     public DateOnly? WeekStartDate { get; set; }
 
+    public int BranchId { get; set; }
+
     public int EmployeeId { get; set; }
 
     public string EmployeeCode { get; set; } = null!;
