@@ -405,7 +405,8 @@ Câu trả lời khi bị hỏi:
 4. **Thanh toán** → đăng nhập `thungan`, checkout, xem biên nhận.
 5. **Báo cáo** → xem doanh thu/lương, nói báo cáo tự lọc theo chi nhánh của phiên.
 6. **Quản trị** → đăng nhập `admin`, xem danh sách chi nhánh, tài khoản, nhân viên; nhấn mạnh ADMIN thấy toàn bộ.
-7. **Kết luận kỹ thuật** → chỉ vào `Program.cs`, `RestaurantDbContext`, một service và một Razor View để chứng minh luồng MVC + Clean Architecture.
+7. **Lọc chi nhánh (tuỳ chọn)** → vẫn ở `admin`, dùng dropdown chi nhánh tại **Nhân viên**, **Bàn ăn**, **Tài khoản** hoặc **Báo cáo** để chọn CN002; sau đó đăng nhập `nv901` để chứng minh tài khoản chi nhánh CN002 chỉ thấy bàn `B11`.
+8. **Kết luận kỹ thuật** → chỉ vào `Program.cs`, `RestaurantDbContext`, một service và một Razor View để chứng minh luồng MVC + Clean Architecture.
 
 ---
 
@@ -425,6 +426,7 @@ Câu trả lời khi bị hỏi:
 | Giao diện | `Web/Views/**/*.cshtml` |
 | Kiểm thử | `Tests/BusinessWorkflowTests.cs` |
 | Nhật ký sửa đổi | `docs/28_ImplementationLog_2026-11-13_BranchManagement.md` |
+| Bộ lọc chi nhánh cho ADMIN | `docs/30_AdminBranchFilter_2026-11-15.md` |
 
 ---
 
@@ -443,7 +445,7 @@ Câu trả lời khi bị hỏi:
 | Số kiểm thử tích hợp | 11 |
 | Build hiện tại | 0 warning, 0 error |
 | Cổng chạy mặc định | `http://localhost:5010` |
-| Tài khoản demo | `admin`, `manager`, `sale`, `thungan`, `bep` — mật khẩu `Admin@123` |
+| Tài khoản demo | `admin`, `manager`, `sale`, `thungan`, `bep` — mật khẩu `Admin@123`; CN002: `nv901`, `thungan2` |
 
 ---
 
