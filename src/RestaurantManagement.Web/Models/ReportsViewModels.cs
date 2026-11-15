@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RestaurantManagement.Application.Models.Branches;
 using RestaurantManagement.Application.Models.Reports;
 
 namespace RestaurantManagement.Web.Models;
@@ -25,6 +26,8 @@ public sealed class ReportsFilterViewModel
 
     public int? MenuItemId { get; set; }
 
+    public int? BranchId { get; set; }
+
     public ReportFilter ToFilter() => new(
         Year,
         Month,
@@ -33,7 +36,8 @@ public sealed class ReportsFilterViewModel
         ShiftId,
         EmployeeId,
         TableId,
-        MenuItemId);
+        MenuItemId,
+        BranchId);
 }
 
 public sealed class ReportsIndexViewModel
@@ -49,6 +53,10 @@ public sealed class ReportsIndexViewModel
     public IReadOnlyList<ReportOptionViewModel> Tables { get; init; } = [];
 
     public IReadOnlyList<ReportOptionViewModel> MenuItems { get; init; } = [];
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; init; } = [];
+
+    public bool ShowBranchFilter { get; init; }
 }
 
 public sealed record ReportOptionViewModel(int Id, string Name);

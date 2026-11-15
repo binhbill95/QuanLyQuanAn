@@ -220,8 +220,8 @@ Phần này nên nói rõ **3 mức** để tránh bị hiểu là “làm thi�
 
 | # | Hạng mục | Backend hiện tại | Frontend hiện tại | Kết luận |
 |---|----------|------------------|-------------------|----------|
-| 1 | Chọn chi nhánh cho ADMIN | Có `BranchId`, `IBranchService.GetOptionsAsync`, query filter theo claim | Không có branch switcher; ADMIN có `BranchId = null` nên thấy toàn bộ dữ liệu | **Thiếu UI + thiếu tham số lọc chi nhánh cho ADMIN** |
-| 2 | Báo cáo theo một chi nhánh | `ReportingService` lọc theo chi nhánh của phiên | Không có dropdown chọn chi nhánh; ADMIN chỉ xem tổng hợp | **Thiếu UI chọn chi nhánh** |
+| 1 | Chọn chi nhánh cho ADMIN | Có `BranchId`, `IBranchService.GetOptionsAsync`, query filter theo claim | **Đã có dropdown lọc chi nhánh** ở Nhân viên, Bàn ăn, Tài khoản và Báo cáo; chưa có branch switcher toàn cục | **Đã có bộ lọc theo trang; chưa có switcher toàn cục** |
+| 2 | Báo cáo theo một chi nhánh | `ReportingService` lọc theo chi nhánh của phiên hoặc theo `ReportFilter.BranchId` khi là ADMIN | **Đã có dropdown chọn chi nhánh**, áp dụng cả Xuất CSV | **Hoàn thành** |
 | 3 | Audit theo chi nhánh | `AuditLog` chưa có `BranchId`; `TableTransferLog` lọc được qua `Invoice` | Không có cột/filter chi nhánh | **Thiếu cả schema và UI** |
 | 4 | Thực đơn/giá riêng từng chi nhánh | `MenuItem`, `Category` dùng chung toàn hệ thống | Không có màn hình giá theo chi nhánh | **Chưa có trong phạm vi** |
 | 5 | Quản lý vị trí công việc (`Position`) | Có bảng + seed; dùng làm lookup cho nhân viên | Chỉ chọn trong form nhân viên, không có CRUD | **Thiếu màn hình CRUD** |
@@ -375,7 +375,7 @@ Phần này nên nói rõ **3 mức** để tránh bị hiểu là “làm thi�
 | Mở bàn, gọi món, thanh toán, chấm công | **Không** cấp cho ADMIN; tiếp tục dùng MANAGER/CASHIER/WAITER theo chi nhánh |
 | Cách xác định phạm vi | ADMIN có `BranchId = NULL`; query filter bỏ điều kiện chi nhánh |
 | Nếu cần vai trò toàn quyền kinh doanh | Tạo tài khoản `OWNER` riêng, không mở rộng ADMIN |
-| Phần còn thiếu | Chưa có branch switcher/bộ lọc chi nhánh cho ADMIN; nếu bổ sung chỉ là tiện ích lọc, không thay đổi quyền |
+| Bộ lọc chi nhánh | Đã có ở Nhân viên, Bàn ăn, Tài khoản và Báo cáo (kèm Xuất CSV); MANAGER/CASHIER/WAITER vẫn bị giới hạn theo chi nhánh của phiên, tham số lọc không vượt quyền |
 
 Câu trả lời khi bị hỏi:
 
@@ -451,7 +451,7 @@ Câu trả lời khi bị hỏi:
 
 1. **“Em có REST API/Swagger.”** → Sai; chỉ có MVC endpoint và `/health/db`.
 2. **“Clean Architecture hoàn chỉnh, business logic nằm ở Application.”** → Không đúng; implementation service đang ở Infrastructure.
-3. **“Tất cả chức năng đều đã có frontend.”** → Không đúng; còn các mục ở mục 4, đặc biệt là chọn/lọc chi nhánh và các bảng mở rộng.
+3. **“Tất cả chức năng đều đã có frontend.”** → Không đúng; còn các mục ở mục 4, đặc biệt là audit theo chi nhánh, branch switcher toàn cục và các bảng mở rộng.
 
 Cách nói an toàn:
 

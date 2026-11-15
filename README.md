@@ -18,6 +18,7 @@
 | Bếp | Hàng đợi món FIFO, nhận chế biến và cập nhật trạng thái món |
 | Thanh toán | Tính tiền, giảm giá theo quyền, tiền mặt/chuyển khoản, biên nhận |
 | Nhân sự | Nhân viên, tài khoản, ca làm, lịch ca, chấm công và duyệt công |
+| Chi nhánh | Quản lý nhiều cơ sở; nhân viên, bàn, hóa đơn và báo cáo tách theo chi nhánh; ADMIN lọc được theo từng chi nhánh |
 | Báo cáo | Doanh thu, món bán, khách theo ca/nhân viên/bàn và lương |
 | Nhật ký thao tác | Tra cứu thay đổi dữ liệu và lịch sử chuyển/gộp bàn |
 
@@ -102,10 +103,14 @@ Database seed sẵn các tài khoản:
 | `sale` | `Admin@123` | Phục vụ — mở bàn và gọi món |
 | `thungan` | `Admin@123` | Thu ngân — thanh toán và in hóa đơn |
 | `bep` | `Admin@123` | Bếp — nhận món và cập nhật trạng thái |
+| `nv901` | `Admin@123` | Phục vụ — chi nhánh 2 (`CN002`) |
+| `thungan2` | `Admin@123` | Thu ngân — chi nhánh 2 (`CN002`) |
 
 Đây là thông tin đăng nhập **chỉ dành cho database demo cục bộ**. Đổi mật khẩu sau khi đăng nhập; không dùng các tài khoản này cho môi trường triển khai thật. Script seed tạo lại các tài khoản demo khi khởi tạo database mới.
 
 Tài khoản `sale` có quyền phục vụ nhưng không có quyền thanh toán; dùng `thungan` (CASHIER) hoặc `manager` để demo thanh toán.
+
+Hai tài khoản `nv901` và `thungan2` thuộc chi nhánh 2 (`CN002`); nhân viên `NV901`/`NV902` và bàn `B11` được seed sẵn. Đăng nhập các tài khoản này chỉ thấy dữ liệu CN002, dùng để demo tách biệt dữ liệu giữa hai chi nhánh.
 
 ## Gợi ý kiểm tra khi chấm đồ án
 
@@ -113,8 +118,9 @@ Tài khoản `sale` có quyền phục vụ nhưng không có quyền thanh toá
 2. Mở một bàn trống, gọi một món; kiểm tra món xuất hiện trong hàng đợi bếp.
 3. Đăng nhập `admin` hoặc dùng một tài khoản có vai trò `KITCHEN` để nhận món và đánh dấu hoàn thành.
 4. Thanh toán bằng tài khoản `thungan` hoặc `manager`; sau thanh toán, kiểm tra bàn được giải phóng và biên nhận được tạo.
-5. Mở **Báo cáo** để xem doanh thu/món bán, và **Nhật ký thao tác** để tra cứu thay đổi.
-6. Các màn hình nhân sự, ca làm, lịch ca, chấm công và duyệt công dành cho quản lý; quyền chi tiết được mô tả trong `docs/03_UserRoles.md`.
+5. Đăng nhập `nv901` để thấy duy nhất bàn `B11` của CN002; gọi món rồi dùng `thungan2` thanh toán. Đăng nhập `admin` và dùng bộ lọc chi nhánh ở **Nhân viên**, **Bàn ăn**, **Tài khoản** hoặc **Báo cáo** để xem riêng CN001/CN002.
+6. Mở **Báo cáo** để xem doanh thu/món bán, và **Nhật ký thao tác** để tra cứu thay đổi.
+7. Các màn hình nhân sự, ca làm, lịch ca, chấm công và duyệt công dành cho quản lý; quyền chi tiết được mô tả trong `docs/03_UserRoles.md`.
 
 Trước khi thử thanh toán QR, đăng nhập `admin` → **Quản lý** → **Tài khoản nhận chuyển khoản** và nhập mã BIN 6 số, tên ngân hàng, số tài khoản và tên chủ tài khoản. QR chứa số tiền và mã hóa đơn; không tự xác nhận tiền đã vào ngân hàng.
 
@@ -149,6 +155,7 @@ src/        Solution ASP.NET Core MVC, Clean Architecture và kiểm thử tích
 - `docs/26_DemoPresentation.md` — kịch bản lời dẫn và chuẩn bị buổi demo.
 - `docs/28_ImplementationLog_2026-11-13_BranchManagement.md` — nhật ký triển khai quản lý chi nhánh và các sửa đổi liên quan.
 - `docs/29_BackendArchitecture_QA.md` — cẩm nang trả lời về kiến trúc backend, API và các phần chưa có giao diện.
+- `docs/30_AdminBranchFilter_2026-11-15.md` — bộ lọc chi nhánh cho ADMIN và dữ liệu demo CN002.
 - `database/README.md` — thứ tự và nội dung SQL scripts.
 - `docker/README.md` — vận hành SQL Server bằng Docker.
 - `src/README.md` — cấu trúc solution và ghi chú kỹ thuật.

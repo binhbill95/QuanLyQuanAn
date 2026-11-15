@@ -34,6 +34,26 @@
     <div class="alert alert-danger">@errorMessage</div>
 }
 
+@if (Model.ShowBranchFilter)
+{
+    <form method="get" asp-action="Index" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <label class="form-label small" for="branchId">Chi nhánh</label>
+            <select id="branchId" name="branchId" class="form-select">
+                <option value="">— Tất cả chi nhánh —</option>
+                @foreach (var branch in Model.Branches)
+                {
+                    <option value="@branch.Id" selected="@(Model.BranchId == branch.Id)">@branch.Name</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end gap-2">
+            <button type="submit" class="btn btn-outline-primary">Lọc</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+        </div>
+    </form>
+}
+
 @if (Model.Tables.Count == 0)
 {
     <div class="alert alert-light border text-center text-muted">Chưa có bàn ăn nào.</div>

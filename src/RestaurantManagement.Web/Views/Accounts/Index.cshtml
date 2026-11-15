@@ -22,19 +22,30 @@
 }
 
 <form method="get" asp-action="Index" class="row g-2 mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <label class="form-label small" for="keyword">Tìm kiếm</label>
         <input id="keyword" name="keyword" value="@Model.Keyword" class="form-control"
                placeholder="Tên đăng nhập, mã hoặc họ tên nhân viên" />
     </div>
 
-    <div class="col-md-3">
+    <div class="col-md-2">
         <label class="form-label small" for="roleId">Vai trò</label>
         <select id="roleId" name="roleId" class="form-select">
             <option value="">— Tất cả —</option>
             @foreach (var role in Model.Roles)
             {
                 <option value="@role.Id" selected="@(Model.RoleId == role.Id)">@role.Name (@role.Code)</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label small" for="branchId">Chi nhánh</label>
+        <select id="branchId" name="branchId" class="form-select">
+            <option value="">— Tất cả —</option>
+            @foreach (var branch in Model.Branches)
+            {
+                <option value="@branch.Id" selected="@(Model.BranchId == branch.Id)">@branch.Name</option>
             }
         </select>
     </div>

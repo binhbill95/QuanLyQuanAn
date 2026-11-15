@@ -13,6 +13,7 @@ public interface IAccountService
         string? keyword,
         int? roleId,
         bool? isActive,
+        int? branchId = null,
         CancellationToken cancellationToken = default);
 
     Task<AccountDetailsDto?> GetDetailsAsync(

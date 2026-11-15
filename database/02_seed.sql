@@ -9,6 +9,8 @@
        sale     / Admin@123   (vai trò WAITER, gắn nhân viên NV002)
        thungan  / Admin@123   (vai trò CASHIER, gắn nhân viên NV005)
        bep      / Admin@123   (vai trò KITCHEN, không gắn nhân viên)
+       nv901    / Admin@123   (vai trò WAITER, gắn nhân viên NV901 — chi nhánh CN002)
+       thungan2 / Admin@123   (vai trò CASHIER, gắn nhân viên NV902 — chi nhánh CN002)
    ===================================================================================== */
 
 SET NOCOUNT ON;
@@ -132,6 +134,22 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV005')
            '0945678901', N'10 Nguyễn Huệ, Quận 1, TP.HCM', '079201005678', '2025-01-10', 0, N'Thu ngân demo'
     FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
     WHERE p.[Code] = 'RECEPTION' AND b.[Code] = 'CN001';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV901')
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
+                                [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
+    SELECT 'NV901', N'Nguyễn Test Chi Nhánh 2', 1, '1998-02-14', p.[Id], b.[Id],
+           '0909999999', N'Chi nhánh 2', '079999009999', '2026-11-13', 0, N'Phục vụ demo chi nhánh 2'
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'WAITER' AND b.[Code] = 'CN002';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[Employee] WHERE [EmployeeCode] = 'NV902')
+    INSERT INTO dbo.[Employee] ([EmployeeCode], [FullName], [Gender], [DateOfBirth], [PositionId], [BranchId],
+                                [Phone], [Address], [IdentityNumber], [StartDate], [Status], [Note])
+    SELECT 'NV902', N'Trần Thu Ngân Chi Nhánh 2', 0, '1996-08-20', p.[Id], b.[Id],
+           '0908888888', N'Chi nhánh 2', '079999009998', '2026-11-13', 0, N'Thu ngân demo chi nhánh 2'
+    FROM dbo.[Position] p CROSS JOIN dbo.[Branch] b
+    WHERE p.[Code] = 'RECEPTION' AND b.[Code] = 'CN002';
 GO
 
 /* ---------- 6. Tài khoản ----------------------------------------------------------- */
@@ -181,6 +199,26 @@ IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'thungan')
     CROSS JOIN dbo.[Employee] e
     CROSS JOIN dbo.[Branch] b
     WHERE r.[Code] = 'CASHIER' AND e.[EmployeeCode] = 'NV005' AND b.[Code] = 'CN001';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'nv901')
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
+    SELECT 'nv901',
+           'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
+           r.[Id], e.[Id], b.[Id], 1
+    FROM dbo.[Role] r
+    CROSS JOIN dbo.[Employee] e
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'WAITER' AND e.[EmployeeCode] = 'NV901' AND b.[Code] = 'CN002';
+
+IF NOT EXISTS (SELECT 1 FROM dbo.[AppUser] WHERE [Username] = 'thungan2')
+    INSERT INTO dbo.[AppUser] ([Username], [PasswordHash], [RoleId], [EmployeeId], [BranchId], [IsActive])
+    SELECT 'thungan2',
+           'AQAAAAIAAzRQAAAAEAECAwQFBgcICQoLDA0ODxAd8Zhog4/42J1y6UeLEZ9/40wCMIySmGHPP0ZWCxXXrg==',
+           r.[Id], e.[Id], b.[Id], 1
+    FROM dbo.[Role] r
+    CROSS JOIN dbo.[Employee] e
+    CROSS JOIN dbo.[Branch] b
+    WHERE r.[Code] = 'CASHIER' AND e.[EmployeeCode] = 'NV902' AND b.[Code] = 'CN002';
 GO
 
 /* ---------- 7. Trình độ của nhân viên ---------------------------------------------- */

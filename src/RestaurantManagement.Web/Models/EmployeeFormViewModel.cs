@@ -16,6 +16,12 @@ public sealed class EmployeeIndexViewModel
 
     public byte? Status { get; init; }
 
+    public int? BranchId { get; init; }
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; init; } = [];
+
+    public bool ShowBranchFilter { get; init; }
+
     public IReadOnlyList<PositionLookupDto> Positions { get; init; } = [];
 }
 

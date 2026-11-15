@@ -91,3 +91,7 @@ Ghi chú: khi mã hoặc tên chi nhánh thay đổi, `BranchService.UpdateAsync
 - `Web/Controllers/BranchesController.cs`, `AccountsController.cs`, `EmployeesController.cs`, `TablesController.cs`, `AccountController.cs`, `ReportsController.cs`
 - `Web/Views/Branches/`, `Accounts/`, `Employees/`, `Tables/`, `Shared/_Layout.cshtml`
 - `Tests/BusinessWorkflowTests.cs`
+
+## 9. Cập nhật 2026-11-15
+
+Đã bổ sung bộ lọc chi nhánh cho ADMIN ở Nhân viên, Bàn ăn, Tài khoản và Báo cáo (kèm Xuất CSV), đồng thời seed sẵn nhân viên/tài khoản/bàn cho CN002. Chi tiết và kết quả kiểm thử xem `docs/30_AdminBranchFilter_2026-11-15.md`.

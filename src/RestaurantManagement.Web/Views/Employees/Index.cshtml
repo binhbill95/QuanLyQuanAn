@@ -23,11 +23,11 @@
 }
 
 <form method="get" asp-action="Index" class="row g-2 mb-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <input name="keyword" value="@Model.Keyword" class="form-control"
                placeholder="Mã, họ tên hoặc điện thoại" />
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
         <select name="positionId" class="form-select">
             <option value="">— Tất cả vị trí —</option>
             @foreach (var position in Model.Positions)
@@ -36,6 +36,18 @@
             }
         </select>
     </div>
+    @if (Model.ShowBranchFilter)
+    {
+        <div class="col-md-2">
+            <select name="branchId" class="form-select">
+                <option value="">— Tất cả chi nhánh —</option>
+                @foreach (var branch in Model.Branches)
+                {
+                    <option value="@branch.Id" selected="@(Model.BranchId == branch.Id)">@branch.Name</option>
+                }
+            </select>
+        </div>
+    }
     <div class="col-md-2">
         <select name="status" class="form-select">
             <option value="">— Trạng thái —</option>
@@ -130,7 +142,8 @@
                        asp-route-page="@pageNumber"
                        asp-route-keyword="@Model.Keyword"
                        asp-route-positionId="@Model.PositionId"
-                       asp-route-status="@Model.Status">@pageNumber</a>
+                       asp-route-status="@Model.Status"
+                       asp-route-branchId="@Model.BranchId">@pageNumber</a>
                 </li>
             }
         </ul>

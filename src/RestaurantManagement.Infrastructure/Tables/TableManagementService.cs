@@ -136,15 +136,24 @@ public sealed class TableManagementService : ITableManagementService
         return OperationResult<bool>.Success(true);
     }
 
-    public async Task<IReadOnlyList<DiningTableDto>> GetTablesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<DiningTableDto>> GetTablesAsync(
+        int? branchId = null,
+        CancellationToken cancellationToken = default)
     {
         var statusRows = await _db.VwDiningTableStatuses
             .AsNoTracking()
             .ToDictionaryAsync(s => s.TableId, s => s.StatusName, cancellationToken);
 
-        var tables = await _db.DiningTables
+        var tableQuery = _db.DiningTables
             .AsNoTracking()
-            .Where(t => !t.IsDeleted)
+            .Where(t => !t.IsDeleted);
+
+        if (branchId.HasValue)
+        {
+            tableQuery = tableQuery.Where(t => t.BranchId == branchId.Value);
+        }
+
+        var tables = await tableQuery
             .OrderBy(t => t.Area == null ? int.MaxValue : t.Area.DisplayOrder)
             .ThenBy(t => t.Area == null ? string.Empty : t.Area.Name)
             .ThenBy(t => t.TableNumber)

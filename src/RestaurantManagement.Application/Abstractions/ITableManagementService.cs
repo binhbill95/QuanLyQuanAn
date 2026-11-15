@@ -17,7 +17,9 @@ public interface ITableManagementService
 
     Task<OperationResult<bool>> DeleteAreaAsync(int id, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<DiningTableDto>> GetTablesAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<DiningTableDto>> GetTablesAsync(
+        int? branchId = null,
+        CancellationToken cancellationToken = default);
 
     Task<DiningTableInput?> GetTableInputAsync(int id, CancellationToken cancellationToken = default);
 

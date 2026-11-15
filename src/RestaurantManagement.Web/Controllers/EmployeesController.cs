@@ -30,11 +30,13 @@ public class EmployeesController : Controller
         string? keyword,
         int? positionId,
         byte? status,
+        int? branchId,
         int page = 1,
         CancellationToken cancellationToken = default)
     {
+        var isAdmin = User.IsInRole("ADMIN");
         var employees = await _employeeService.SearchAsync(
-            new EmployeeSearchRequest(keyword, positionId, status, page, PageSize),
+            new EmployeeSearchRequest(keyword, positionId, status, page, PageSize, isAdmin ? branchId : null),
             cancellationToken);
 
         var model = new EmployeeIndexViewModel
@@ -43,6 +45,11 @@ public class EmployeesController : Controller
             Keyword = keyword,
             PositionId = positionId,
             Status = status,
+            BranchId = isAdmin ? branchId : null,
+            Branches = isAdmin
+                ? await _branchService.GetOptionsAsync(cancellationToken)
+                : [],
+            ShowBranchFilter = isAdmin,
             Positions = await _employeeService.GetPositionsAsync(cancellationToken),
         };
 

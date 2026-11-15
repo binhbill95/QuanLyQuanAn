@@ -56,6 +56,11 @@ public sealed class EmployeeService : IEmployeeService
             query = query.Where(e => e.Status == request.Status.Value);
         }
 
+        if (request.BranchId.HasValue)
+        {
+            query = query.Where(e => e.BranchId == request.BranchId.Value);
+        }
+
         var totalCount = await query.CountAsync(cancellationToken);
 
         var items = await query

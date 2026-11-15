@@ -41,6 +41,7 @@ public sealed class AccountService : IAccountService
         string? keyword,
         int? roleId,
         bool? isActive,
+        int? branchId = null,
         CancellationToken cancellationToken = default)
     {
         var query = _db.AppUsers
@@ -64,6 +65,11 @@ public sealed class AccountService : IAccountService
         if (isActive.HasValue)
         {
             query = query.Where(u => u.IsActive == isActive.Value);
+        }
+
+        if (branchId.HasValue)
+        {
+            query = query.Where(u => u.BranchId == branchId.Value);
         }
 
         return await query

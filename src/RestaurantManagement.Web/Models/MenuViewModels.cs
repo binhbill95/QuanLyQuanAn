@@ -100,6 +100,12 @@ public sealed class DiningTablesIndexViewModel
     public IReadOnlyList<DiningTableDto> Tables { get; init; } = [];
 
     public bool CanManage { get; init; }
+
+    public int? BranchId { get; init; }
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; init; } = [];
+
+    public bool ShowBranchFilter { get; init; }
 }
 
 public sealed class DiningTableFormViewModel

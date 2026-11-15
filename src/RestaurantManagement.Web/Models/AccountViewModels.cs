@@ -16,6 +16,10 @@ public sealed class AccountIndexViewModel
 
     public bool? IsActive { get; init; }
 
+    public int? BranchId { get; init; }
+
+    public IReadOnlyList<BranchOptionDto> Branches { get; init; } = [];
+
     public int CurrentUserId { get; init; }
 }
 

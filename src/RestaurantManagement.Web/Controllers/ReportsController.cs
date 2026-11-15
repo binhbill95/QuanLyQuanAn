@@ -14,11 +14,16 @@ public class ReportsController : Controller
 {
     private readonly IReportingService _reportingService;
     private readonly RestaurantDbContext _db;
+    private readonly IBranchService _branchService;
 
-    public ReportsController(IReportingService reportingService, RestaurantDbContext db)
+    public ReportsController(
+        IReportingService reportingService,
+        RestaurantDbContext db,
+        IBranchService branchService)
     {
         _reportingService = reportingService;
         _db = db;
+        _branchService = branchService;
     }
 
     public async Task<IActionResult> Index(
@@ -33,6 +38,7 @@ public class ReportsController : Controller
 
         var dashboard = await _reportingService.GetDashboardAsync(filter.ToFilter(), cancellationToken);
         var options = await GetOptionsAsync(cancellationToken);
+        var isAdmin = User.IsInRole("ADMIN");
         return View(new ReportsIndexViewModel
         {
             Filter = filter,
@@ -41,6 +47,10 @@ public class ReportsController : Controller
             Employees = options.Employees,
             Tables = options.Tables,
             MenuItems = options.MenuItems,
+            Branches = isAdmin
+                ? await _branchService.GetOptionsAsync(cancellationToken)
+                : [],
+            ShowBranchFilter = isAdmin,
         });
     }
 

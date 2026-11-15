@@ -8,7 +8,8 @@ public sealed record ReportFilter(
     int? ShiftId,
     int? EmployeeId,
     int? TableId,
-    int? MenuItemId);
+    int? MenuItemId,
+    int? BranchId = null);
 
 public sealed record RevenueReportRow(int Year, int Quarter, int Month, int InvoiceCount, int CustomerCount, decimal Revenue);
 

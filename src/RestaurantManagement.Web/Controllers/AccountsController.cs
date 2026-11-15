@@ -30,15 +30,18 @@ public class AccountsController : Controller
         string? keyword,
         int? roleId,
         bool? isActive,
+        int? branchId,
         CancellationToken cancellationToken = default)
     {
         var model = new AccountIndexViewModel
         {
-            Accounts = await _accountService.SearchAsync(keyword, roleId, isActive, cancellationToken),
+            Accounts = await _accountService.SearchAsync(keyword, roleId, isActive, branchId, cancellationToken),
             Roles = await _accountService.GetRoleOptionsAsync(cancellationToken),
+            Branches = await _branchService.GetOptionsAsync(cancellationToken),
             Keyword = keyword,
             RoleId = roleId,
             IsActive = isActive,
+            BranchId = branchId,
             CurrentUserId = _currentUser.UserId ?? 0,
         };
 

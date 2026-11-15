@@ -59,7 +59,8 @@ public sealed record EmployeeSearchRequest(
     int? PositionId = null,
     byte? Status = null,
     int Page = 1,
-    int PageSize = 20);
+    int PageSize = 20,
+    int? BranchId = null);
 
 /// <summary>Vị trí cho dropdown.</summary>
 public sealed record PositionLookupDto(

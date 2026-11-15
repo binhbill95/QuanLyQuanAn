@@ -104,7 +104,8 @@ public sealed class ReportingService : IReportingService
             payrollQuery = payrollQuery.Where(row => row.EmployeeId == filter.EmployeeId);
         }
 
-        if (_currentUser.BranchId is int branchId)
+        var effectiveBranchId = _currentUser.BranchId ?? filter.BranchId;
+        if (effectiveBranchId is int branchId)
         {
             revenueQuery = revenueQuery.Where(row => row.BranchId == branchId);
             shiftQuery = shiftQuery.Where(row => row.BranchId == branchId);

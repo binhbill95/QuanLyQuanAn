@@ -35,6 +35,7 @@
            asp-route-EmployeeId="@Model.Filter.EmployeeId"
            asp-route-TableId="@Model.Filter.TableId"
            asp-route-MenuItemId="@Model.Filter.MenuItemId"
+           asp-route-BranchId="@Model.Filter.BranchId"
            class="btn btn-outline-success">Xuất CSV</a>
         <button type="button" class="btn btn-outline-secondary" onclick="window.print()">In báo cáo</button>
     </div>
@@ -43,6 +44,19 @@
 <form method="get" class="card mb-4 no-print">
     <div class="card-body">
         <div class="row g-2 align-items-end">
+            @if (Model.ShowBranchFilter)
+            {
+                <div class="col-6 col-md-2">
+                    <label for="BranchId" class="form-label">Chi nhánh</label>
+                    <select id="BranchId" name="BranchId" class="form-select">
+                        <option value="">Tất cả chi nhánh</option>
+                        @foreach (var branch in Model.Branches)
+                        {
+                            <option value="@branch.Id" selected="@(Model.Filter.BranchId == branch.Id ? "selected" : null)">@branch.Name</option>
+                        }
+                    </select>
+                </div>
+            }
             <div class="col-6 col-md-2">
                 <label for="Year" class="form-label">Năm</label>
                 <input id="Year" name="Year" type="number" min="2000" max="2100"

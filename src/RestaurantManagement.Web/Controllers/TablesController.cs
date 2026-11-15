@@ -23,12 +23,18 @@ public class TablesController : Controller
         _currentUser = currentUser;
     }
 
-    public async Task<IActionResult> Index(CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(int? branchId, CancellationToken cancellationToken = default)
     {
+        var isAdmin = User.IsInRole("ADMIN");
         return View(new DiningTablesIndexViewModel
         {
-            Tables = await _tableService.GetTablesAsync(cancellationToken),
+            Tables = await _tableService.GetTablesAsync(isAdmin ? branchId : null, cancellationToken),
             CanManage = CanManage(),
+            BranchId = isAdmin ? branchId : null,
+            Branches = isAdmin
+                ? await _branchService.GetOptionsAsync(cancellationToken)
+                : [],
+            ShowBranchFilter = isAdmin,
         });
     }
 
