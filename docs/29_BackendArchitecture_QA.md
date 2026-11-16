@@ -222,7 +222,7 @@ Phần này nên nói rõ **3 mức** để tránh bị hiểu là “làm thi�
 |---|----------|------------------|-------------------|----------|
 | 1 | Chọn chi nhánh cho ADMIN | Có `BranchId`, `IBranchService.GetOptionsAsync`, query filter theo claim | **Đã có dropdown lọc chi nhánh** ở Nhân viên, Bàn ăn, Tài khoản và Báo cáo; chưa có branch switcher toàn cục | **Đã có bộ lọc theo trang; chưa có switcher toàn cục** |
 | 2 | Báo cáo theo một chi nhánh | `ReportingService` lọc theo chi nhánh của phiên hoặc theo `ReportFilter.BranchId` khi là ADMIN | **Đã có dropdown chọn chi nhánh**, áp dụng cả Xuất CSV | **Hoàn thành** |
-| 3 | Audit theo chi nhánh | `AuditLog` chưa có `BranchId`; `TableTransferLog` lọc được qua `Invoice` | Không có cột/filter chi nhánh | **Thiếu cả schema và UI** |
+| 3 | Audit theo chi nhánh | `AuditLog` có `BranchId`; trigger tự gắn chi nhánh; `TableTransferLog` lọc qua `Invoice` | **Đã có cột Chi nhánh + dropdown lọc cho ADMIN** | **Hoàn thành** |
 | 4 | Thực đơn/giá riêng từng chi nhánh | `MenuItem`, `Category` dùng chung toàn hệ thống | Không có màn hình giá theo chi nhánh | **Chưa có trong phạm vi** |
 | 5 | Quản lý vị trí công việc (`Position`) | Có bảng + seed; dùng làm lookup cho nhân viên | Chỉ chọn trong form nhân viên, không có CRUD | **Thiếu màn hình CRUD** |
 | 6 | Kỹ năng nhân viên (`Skill`, `EmployeeSkill`) | Có bảng trong schema/domain | Không có màn hình | **Chưa có service + UI** |
@@ -263,8 +263,8 @@ Phần này nên nói rõ **3 mức** để tránh bị hiểu là “làm thi�
 | “Sao không có màn hình quản lý kỹ năng/đồng phục?” | “Các bảng này có trong thiết kế CSDL để đáp ứng yêu cầu mở rộng, nhưng chưa thuộc luồng nghiệp vụ bắt buộc của đồ án; em ưu tiên hoàn thiện luồng bán hàng, bếp, thanh toán, nhân sự và báo cáo.” |
 | “Sao không phân quyền động?” | “Hiện phân quyền theo role + policy, đủ cho 6 vai trò của đồ án. Bảng `Permission`/`RolePermission` đã có trong schema để làm phân quyền động sau này.” |
 | “Sao không có API JSON?” | “Đồ án dùng MVC server-rendered; em tách interface service ở Application nên có thể bọc thành Web API sau mà không đổi nghiệp vụ.” |
-| “Sao ADMIN xem được tất cả chi nhánh?” | “Đúng, vì ADMIN là tài khoản hệ thống không gắn chi nhánh (`BranchId = null`); query filter chỉ áp dụng khi claim có chi nhánh. Muốn ADMIN xem riêng từng chi nhánh thì cần thêm bộ lọc.” |
-| “Vì sao audit chưa lọc chi nhánh?” | “`AuditLog` hiện chưa có cột `BranchId`, nên chưa thể lọc chính xác; `TableTransferLog` thì lọc được qua hóa đơn. Đây là hạn chế đã ghi nhận.” |
+| “Sao ADMIN xem được tất cả chi nhánh?” | “Đúng, vì ADMIN là tài khoản hệ thống không gắn chi nhánh (`BranchId = null`); query filter chỉ áp dụng khi claim có chi nhánh. ADMIN có dropdown lọc theo từng chi nhánh ở Nhân viên, Bàn ăn, Tài khoản, Báo cáo và Nhật ký thao tác.” |
+| “Vì sao audit chưa lọc chi nhánh?” | “Hiện đã lọc được: `AuditLog` có cột `BranchId`, trigger tự gắn chi nhánh theo bảng gốc; `TableTransferLog` lọc qua `Invoice`. Bản ghi dùng chung như thực đơn/danh mục/ca làm để `BranchId = NULL` và chỉ ADMIN thấy.” |
 
 ---
 
@@ -324,7 +324,7 @@ Phần này nên nói rõ **3 mức** để tránh bị hiểu là “làm thi�
 
 **Hỏi: “Phần nào chưa có frontend?”**
 
-> “Các phần chính đã có màn hình. Phần chưa có UI gồm: chọn chi nhánh cho ADMIN, lọc báo cáo theo chi nhánh, audit theo chi nhánh; các bảng mở rộng như kỹ năng, đồng phục, tham số hệ thống, phân quyền động chưa có màn hình; thực đơn/giá theo chi nhánh và REST API chưa thuộc phạm vi.”
+> “Các phần chính đã có màn hình. Bộ lọc chi nhánh cho ADMIN đã có ở Nhân viên, Bàn ăn, Tài khoản, Báo cáo và Nhật ký thao tác. Phần chưa có UI gồm: các bảng mở rộng như kỹ năng, đồng phục, tham số hệ thống, phân quyền động; thực đơn/giá theo chi nhánh, branch switcher toàn cục và REST API chưa thuộc phạm vi.”
 
 ### 5.3. Về bảo mật
 
@@ -393,7 +393,7 @@ Câu trả lời khi bị hỏi:
 
 **Hỏi: “Điểm yếu lớn nhất của đồ án?”**
 
-> “Ba điểm: một là business logic đặt trong Infrastructure nên chưa phải Clean Architecture thuần; hai là chưa có REST API/SPA; ba là một số bảng mở rộng và phân tách chi nhánh ở mức báo cáo/audit chưa hoàn thiện. Em đã ghi rõ trong tài liệu triển khai để không nói quá phạm vi.”
+> “Ba điểm: một là business logic đặt trong Infrastructure nên chưa phải Clean Architecture thuần; hai là chưa có REST API/SPA; ba là một số bảng mở rộng (kỹ năng, đồng phục, tham số hệ thống, phân quyền động) chưa có màn hình. Phân tách chi nhánh đã hoàn thiện ở nhân viên, bàn, tài khoản, báo cáo và nhật ký thao tác.”
 
 ---
 
@@ -405,7 +405,7 @@ Câu trả lời khi bị hỏi:
 4. **Thanh toán** → đăng nhập `thungan`, checkout, xem biên nhận.
 5. **Báo cáo** → xem doanh thu/lương, nói báo cáo tự lọc theo chi nhánh của phiên.
 6. **Quản trị** → đăng nhập `admin`, xem danh sách chi nhánh, tài khoản, nhân viên; nhấn mạnh ADMIN thấy toàn bộ.
-7. **Lọc chi nhánh (tuỳ chọn)** → vẫn ở `admin`, dùng dropdown chi nhánh tại **Nhân viên**, **Bàn ăn**, **Tài khoản** hoặc **Báo cáo** để chọn CN002; sau đó đăng nhập `nv901` để chứng minh tài khoản chi nhánh CN002 chỉ thấy bàn `B11`.
+7. **Lọc chi nhánh (tuỳ chọn)** → vẫn ở `admin`, dùng dropdown chi nhánh tại **Nhân viên**, **Bàn ăn**, **Tài khoản**, **Báo cáo** hoặc **Nhật ký thao tác** để chọn CN002; sau đó đăng nhập `nv901` để chứng minh tài khoản chi nhánh CN002 chỉ thấy bàn `B11`.
 8. **Kết luận kỹ thuật** → chỉ vào `Program.cs`, `RestaurantDbContext`, một service và một Razor View để chứng minh luồng MVC + Clean Architecture.
 
 ---
@@ -440,7 +440,7 @@ Câu trả lời khi bị hỏi:
 | Số view | 10 |
 | Số entity scaffold | 36 |
 | Số interface service nghiệp vụ | 16 (+ `ICurrentUserService`) |
-| Số query filter theo chi nhánh | 13 |
+| Số query filter theo chi nhánh | 14 |
 | Số controller | 18 |
 | Số kiểm thử tích hợp | 11 |
 | Build hiện tại | 0 warning, 0 error |
@@ -453,7 +453,7 @@ Câu trả lời khi bị hỏi:
 
 1. **“Em có REST API/Swagger.”** → Sai; chỉ có MVC endpoint và `/health/db`.
 2. **“Clean Architecture hoàn chỉnh, business logic nằm ở Application.”** → Không đúng; implementation service đang ở Infrastructure.
-3. **“Tất cả chức năng đều đã có frontend.”** → Không đúng; còn các mục ở mục 4, đặc biệt là audit theo chi nhánh, branch switcher toàn cục và các bảng mở rộng.
+3. **“Tất cả chức năng đều đã có frontend.”** → Không đúng; còn các mục ở mục 4, đặc biệt là branch switcher toàn cục và các bảng mở rộng.
 
 Cách nói an toàn:
 

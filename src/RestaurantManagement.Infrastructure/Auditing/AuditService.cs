@@ -78,6 +78,12 @@ public sealed class AuditService : IAuditService
                 (log.Note != null && log.Note.Contains(search)));
         }
 
+        if (filter.BranchId is int branchId)
+        {
+            auditQuery = auditQuery.Where(log => log.BranchId == branchId);
+            transferQuery = transferQuery.Where(log => log.Invoice.BranchId == branchId);
+        }
+
         var auditCount = await auditQuery.CountAsync(cancellationToken);
         var transferCount = await transferQuery.CountAsync(cancellationToken);
         var totalCount = auditCount + transferCount;
@@ -95,6 +101,7 @@ public sealed class AuditService : IAuditService
                 log.Action,
                 log.ChangedAt,
                 log.ChangedByUser == null ? null : log.ChangedByUser.Username,
+                log.Branch == null ? null : log.Branch.Name,
                 null,
                 log.OldValues,
                 log.NewValues))
@@ -112,6 +119,7 @@ public sealed class AuditService : IAuditService
                     : "Chuyển bàn",
                 log.MovedAt,
                 log.MovedByEmployee.FullName,
+                log.Invoice.Branch == null ? null : log.Invoice.Branch.Name,
                 log.FromTable.TableNumber + " → " + log.ToTable.TableNumber +
                 (log.Note == null ? string.Empty : " · " + log.Note),
                 null,

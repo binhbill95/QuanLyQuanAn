@@ -87,6 +87,6 @@ Luồng CN002 đầu-cuối:
 ## 6. Hạn chế còn lại
 
 - Chưa có branch switcher toàn cục trên thanh điều hướng; bộ lọc đang đặt tại từng màn hình.
-- `AuditLog` chưa có `BranchId` nên chưa lọc audit theo chi nhánh.
+- `AuditLog` đã có `BranchId` và lọc được theo chi nhánh (xem `docs/31_AuditBranchFilter_2026-11-16.md`).
 - Thực đơn/giá và khu vực bàn vẫn dùng chung toàn hệ thống.
 - `vw_KitchenQueue` chưa có cột `BranchId` (đang lọc gián tiếp qua hóa đơn).

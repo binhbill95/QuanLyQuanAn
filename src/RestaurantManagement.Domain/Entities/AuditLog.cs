@@ -23,5 +23,9 @@ public partial class AuditLog
 
     public string? ClientIp { get; set; }
 
+    public int? BranchId { get; set; }
+
     public virtual AppUser? ChangedByUser { get; set; }
+
+    public virtual Branch? Branch { get; set; }
 }

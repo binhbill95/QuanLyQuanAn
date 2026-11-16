@@ -9,9 +9,9 @@ Thư mục chứa toàn bộ script CSDL cho **SQL Server 2022** (chạy trong D
 | 1 | `01_schema.sql` | Tạo database `RestaurantManagement`, bảng, PK/FK, CHECK, UNIQUE, INDEX |
 | 2 | `02_seed.sql` | Dữ liệu mẫu: 6 vai trò, 2 chi nhánh, 4 vị trí, 4 kỹ năng, 2 ca, 11 bàn, 14 món, tài khoản mẫu |
 | 3 | `03_views.sql` | 10 view phục vụ trạng thái bàn, hàng đợi bếp, doanh thu, khách theo ca/nhân viên/bàn, bảng lương |
-| 4 | `04_audit.sql` | 10 trigger ghi `AuditLog` (tài khoản, nhân sự, danh mục/món, ca/lịch/chấm công, hóa đơn/thanh toán) |
+| 4 | `04_audit.sql` | 10 trigger ghi `AuditLog` kèm `BranchId` (tài khoản, nhân sự, danh mục/món, ca/lịch/chấm công, hóa đơn/thanh toán) |
 | 5 | `05_rules.sql` | 2 trigger ràng buộc nghiệp vụ: chỉ hủy món đang chờ; không thêm món vào hóa đơn đã thanh toán |
-| 6 | `06_branch_management.sql` | Bổ sung chi nhánh cho database đã có dữ liệu; idempotent, backfill sang `CN001` |
+| 6 | `06_branch_management.sql` | Bổ sung chi nhánh cho database đã có dữ liệu; idempotent, backfill sang `CN001`, kể cả `AuditLog.BranchId` |
 
 ## Kiểm chứng đã chạy
 
@@ -38,7 +38,7 @@ sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 05_rules.sql
 sqlcmd -S localhost,1433 -U sa -P "<MSSQL_SA_PASSWORD>" -C -b -I -i 06_branch_management.sql
 ```
 
-Với database cũ chưa có chi nhánh, sao lưu trước rồi chạy `06_branch_management.sql`, sau đó chạy lại `03_views.sql` (view có thêm cột `BranchId`). Script tạo `CN001`/`CN002`, gán dữ liệu hiện có về `CN001`, rồi bổ sung khóa ngoại. Chi nhánh được lưu trên tài khoản, bàn và hóa đơn; thực đơn/giá vẫn dùng chung.
+Với database cũ chưa có chi nhánh, sao lưu trước rồi chạy `06_branch_management.sql`, sau đó chạy lại `03_views.sql` (view có thêm cột `BranchId`) và `04_audit.sql` (trigger gắn `AuditLog.BranchId`). Script tạo `CN001`/`CN002`, gán dữ liệu hiện có về `CN001`, backfill nhật ký thao tác, rồi bổ sung khóa ngoại. Chi nhánh được lưu trên tài khoản, bàn và hóa đơn; thực đơn/giá vẫn dùng chung.
 
 ## Tài khoản mẫu
 

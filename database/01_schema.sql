@@ -797,13 +797,16 @@ BEGIN
         [ChangedByUserId] int            NULL,
         [ChangedAt]       datetime2(0)   NOT NULL CONSTRAINT DF_AuditLog_ChangedAt DEFAULT (SYSUTCDATETIME()),
         [ClientIp]        varchar(45)    NULL,
+        [BranchId]        int            NULL,
 
         CONSTRAINT PK_AuditLog PRIMARY KEY CLUSTERED ([Id]),
         CONSTRAINT CK_AuditLog_Action CHECK ([Action] IN ('INSERT', 'UPDATE', 'DELETE')),
-        CONSTRAINT FK_AuditLog_AppUser FOREIGN KEY ([ChangedByUserId]) REFERENCES dbo.[AppUser] ([Id])
+        CONSTRAINT FK_AuditLog_AppUser FOREIGN KEY ([ChangedByUserId]) REFERENCES dbo.[AppUser] ([Id]),
+        CONSTRAINT FK_AuditLog_Branch FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id])
     );
 
     CREATE INDEX IX_AuditLog_Table_Record_ChangedAt ON dbo.[AuditLog] ([TableName], [RecordId], [ChangedAt]);
+    CREATE INDEX IX_AuditLog_Branch_ChangedAt ON dbo.[AuditLog] ([BranchId], [ChangedAt]);
 END
 GO
 

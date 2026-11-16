@@ -20,7 +20,7 @@
 | Nhân sự | Nhân viên, tài khoản, ca làm, lịch ca, chấm công và duyệt công |
 | Chi nhánh | Quản lý nhiều cơ sở; nhân viên, bàn, hóa đơn và báo cáo tách theo chi nhánh; ADMIN lọc được theo từng chi nhánh |
 | Báo cáo | Doanh thu, món bán, khách theo ca/nhân viên/bàn và lương |
-| Nhật ký thao tác | Tra cứu thay đổi dữ liệu và lịch sử chuyển/gộp bàn |
+| Nhật ký thao tác | Tra cứu thay đổi dữ liệu và lịch sử chuyển/gộp bàn; lọc theo chi nhánh cho ADMIN |
 
 Các luồng nghiệp vụ quan trọng gồm lưu giá món tại thời điểm gọi, không cho gọi món hết hoặc thuộc nhóm đã ngừng, chỉ hủy món còn chờ bếp, kiểm tra sức chứa khi mở/chuyển/gộp bàn, giữ số khách theo từng bàn và giải phóng bàn cùng giao dịch thanh toán. Thanh toán chuyển khoản hỗ trợ VietQR tạo tại máy chủ từ cấu hình ngân hàng; thu ngân vẫn phải kiểm tra giao dịch và xác nhận thủ công. Món bị xóa khỏi thực đơn được xóa mềm; quản lý có thể khôi phục món vào nhóm đang hoạt động.
 
@@ -118,8 +118,8 @@ Hai tài khoản `nv901` và `thungan2` thuộc chi nhánh 2 (`CN002`); nhân vi
 2. Mở một bàn trống, gọi một món; kiểm tra món xuất hiện trong hàng đợi bếp.
 3. Đăng nhập `admin` hoặc dùng một tài khoản có vai trò `KITCHEN` để nhận món và đánh dấu hoàn thành.
 4. Thanh toán bằng tài khoản `thungan` hoặc `manager`; sau thanh toán, kiểm tra bàn được giải phóng và biên nhận được tạo.
-5. Đăng nhập `nv901` để thấy duy nhất bàn `B11` của CN002; gọi món rồi dùng `thungan2` thanh toán. Đăng nhập `admin` và dùng bộ lọc chi nhánh ở **Nhân viên**, **Bàn ăn**, **Tài khoản** hoặc **Báo cáo** để xem riêng CN001/CN002.
-6. Mở **Báo cáo** để xem doanh thu/món bán, và **Nhật ký thao tác** để tra cứu thay đổi.
+5. Đăng nhập `nv901` để thấy duy nhất bàn `B11` của CN002; gọi món rồi dùng `thungan2` thanh toán. Đăng nhập `admin` và dùng bộ lọc chi nhánh ở **Nhân viên**, **Bàn ăn**, **Tài khoản**, **Báo cáo** hoặc **Nhật ký thao tác** để xem riêng CN001/CN002.
+6. Mở **Báo cáo** để xem doanh thu/món bán, và **Nhật ký thao tác** để tra cứu thay đổi (có cột Chi nhánh; bản ghi dùng chung hiển thị "Dùng chung").
 7. Các màn hình nhân sự, ca làm, lịch ca, chấm công và duyệt công dành cho quản lý; quyền chi tiết được mô tả trong `docs/03_UserRoles.md`.
 
 Trước khi thử thanh toán QR, đăng nhập `admin` → **Quản lý** → **Tài khoản nhận chuyển khoản** và nhập mã BIN 6 số, tên ngân hàng, số tài khoản và tên chủ tài khoản. QR chứa số tiền và mã hóa đơn; không tự xác nhận tiền đã vào ngân hàng.
@@ -156,6 +156,7 @@ src/        Solution ASP.NET Core MVC, Clean Architecture và kiểm thử tích
 - `docs/28_ImplementationLog_2026-11-13_BranchManagement.md` — nhật ký triển khai quản lý chi nhánh và các sửa đổi liên quan.
 - `docs/29_BackendArchitecture_QA.md` — cẩm nang trả lời về kiến trúc backend, API và các phần chưa có giao diện.
 - `docs/30_AdminBranchFilter_2026-11-15.md` — bộ lọc chi nhánh cho ADMIN và dữ liệu demo CN002.
+- `docs/31_AuditBranchFilter_2026-11-16.md` — lọc nhật ký thao tác theo chi nhánh (schema, trigger, UI, kiểm thử).
 - `database/README.md` — thứ tự và nội dung SQL scripts.
 - `docker/README.md` — vận hành SQL Server bằng Docker.
 - `src/README.md` — cấu trúc solution và ghi chú kỹ thuật.

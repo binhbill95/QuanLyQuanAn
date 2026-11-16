@@ -51,6 +51,9 @@ IF COL_LENGTH(N'dbo.DiningTable', N'BranchId') IS NULL
 
 IF COL_LENGTH(N'dbo.Invoice', N'BranchId') IS NULL
     ALTER TABLE dbo.[Invoice] ADD [BranchId] int NULL;
+
+IF COL_LENGTH(N'dbo.AuditLog', N'BranchId') IS NULL
+    ALTER TABLE dbo.[AuditLog] ADD [BranchId] int NULL;
 GO
 
 /* Batches above add the columns; the variable and backfill must compile after the columns exist. */
@@ -83,6 +86,86 @@ OUTER APPLY
     ORDER BY it.[AssignedAt], it.[Id]
 ) AS tableBranch
 WHERE i.[BranchId] IS NULL;
+GO
+
+/* AuditLog.BranchId: bản ghi gắn chi nhánh để lọc nhật ký theo chi nhánh.
+   Bản ghi của dữ liệu dùng chung (Category, MenuItem, Shift) giữ NULL. */
+IF COL_LENGTH(N'dbo.AuditLog', N'BranchId') IS NOT NULL
+BEGIN
+    UPDATE dbo.[AuditLog]
+    SET [BranchId] = COALESCE(
+            TRY_CONVERT(int, JSON_VALUE([NewValues], '$.BranchId')),
+            TRY_CONVERT(int, JSON_VALUE([OldValues], '$.BranchId')))
+    WHERE [BranchId] IS NULL
+      AND [TableName] IN ('Invoice', 'Employee', 'AppUser');
+
+    UPDATE a
+    SET a.[BranchId] = inv.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[Invoice] inv
+        ON inv.[Id] = TRY_CONVERT(int,
+            COALESCE(JSON_VALUE(a.[NewValues], '$.InvoiceId'), JSON_VALUE(a.[OldValues], '$.InvoiceId')))
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] IN ('InvoiceDetail', 'Payment');
+
+    UPDATE a
+    SET a.[BranchId] = emp.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[Employee] emp
+        ON emp.[Id] = TRY_CONVERT(int,
+            COALESCE(JSON_VALUE(a.[NewValues], '$.EmployeeId'), JSON_VALUE(a.[OldValues], '$.EmployeeId')))
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] = 'Schedule';
+
+    UPDATE a
+    SET a.[BranchId] = emp.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[Schedule] sc
+        ON sc.[Id] = TRY_CONVERT(int,
+            COALESCE(JSON_VALUE(a.[NewValues], '$.ScheduleId'), JSON_VALUE(a.[OldValues], '$.ScheduleId')))
+    INNER JOIN dbo.[Employee] emp ON emp.[Id] = sc.[EmployeeId]
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] = 'Attendance';
+
+    /* Bản ghi cũ không có BranchId trong JSON: đối chiếu bảng gốc qua RecordId. */
+    UPDATE a
+    SET a.[BranchId] = i.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[Invoice] i ON i.[Id] = TRY_CONVERT(int, a.[RecordId])
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] = 'Invoice';
+
+    /* Hóa đơn đã bị xóa cứng: lấy chi nhánh từ chính nhật ký của hóa đơn đó. */
+    UPDATE a
+    SET a.[BranchId] = src.[BranchId]
+    FROM dbo.[AuditLog] a
+    CROSS APPLY
+    (
+        SELECT TOP (1) x.[BranchId]
+        FROM dbo.[AuditLog] x
+        WHERE x.[TableName] = N'Invoice'
+          AND x.[RecordId] = TRY_CONVERT(nvarchar(50),
+                COALESCE(JSON_VALUE(a.[NewValues], '$.InvoiceId'), JSON_VALUE(a.[OldValues], '$.InvoiceId')))
+          AND x.[BranchId] IS NOT NULL
+        ORDER BY x.[Id] DESC
+    ) AS src
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] IN ('InvoiceDetail', 'Payment');
+
+    UPDATE a
+    SET a.[BranchId] = u.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[AppUser] u ON u.[Id] = TRY_CONVERT(int, a.[RecordId])
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] = 'AppUser';
+
+    UPDATE a
+    SET a.[BranchId] = e.[BranchId]
+    FROM dbo.[AuditLog] a
+    INNER JOIN dbo.[Employee] e ON e.[Id] = TRY_CONVERT(int, a.[RecordId])
+    WHERE a.[BranchId] IS NULL
+      AND a.[TableName] = 'Employee';
+END
 GO
 
 IF COL_LENGTH(N'dbo.DiningTable', N'BranchId') IS NOT NULL
@@ -162,6 +245,10 @@ IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_Invoice_Branch
     ALTER TABLE dbo.[Invoice] ADD CONSTRAINT FK_Invoice_Branch
         FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id]);
 
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_AuditLog_Branch')
+    ALTER TABLE dbo.[AuditLog] ADD CONSTRAINT FK_AuditLog_Branch
+        FOREIGN KEY ([BranchId]) REFERENCES dbo.[Branch] ([Id]);
+
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_DiningTable_BranchId'
                AND [object_id] = OBJECT_ID(N'dbo.DiningTable'))
     CREATE INDEX IX_DiningTable_BranchId ON dbo.[DiningTable] ([BranchId]);
@@ -173,4 +260,8 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_Employee_BranchId'
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_Invoice_BranchId'
                AND [object_id] = OBJECT_ID(N'dbo.Invoice'))
     CREATE INDEX IX_Invoice_BranchId ON dbo.[Invoice] ([BranchId]);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_AuditLog_Branch_ChangedAt'
+               AND [object_id] = OBJECT_ID(N'dbo.AuditLog'))
+    CREATE INDEX IX_AuditLog_Branch_ChangedAt ON dbo.[AuditLog] ([BranchId], [ChangedAt]);
 GO

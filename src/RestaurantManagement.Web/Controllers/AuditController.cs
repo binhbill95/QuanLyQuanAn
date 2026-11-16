@@ -10,16 +10,21 @@ namespace RestaurantManagement.Web.Controllers;
 public sealed class AuditController : Controller
 {
     private readonly IAuditService _auditService;
+    private readonly IBranchService _branchService;
 
-    public AuditController(IAuditService auditService)
+    public AuditController(IAuditService auditService, IBranchService branchService)
     {
         _auditService = auditService;
+        _branchService = branchService;
     }
 
     public async Task<IActionResult> Index(
         AuditFilterViewModel filter,
         CancellationToken cancellationToken = default)
     {
+        var isAdmin = User.IsInRole("ADMIN");
+        var branchId = isAdmin ? filter.BranchId : null;
+
         if (filter.FromDate.HasValue &&
             filter.ToDate.HasValue &&
             filter.FromDate > filter.ToDate)
@@ -32,8 +37,13 @@ public sealed class AuditController : Controller
                     filter.ToDate,
                     filter.Operation,
                     filter.Search,
-                    1),
+                    1,
+                    branchId),
                 Results = new AuditActivityPage([], 1, 25, 0),
+                Branches = isAdmin
+                    ? await _branchService.GetOptionsAsync(cancellationToken)
+                    : [],
+                ShowBranchFilter = isAdmin,
             });
         }
 
@@ -42,13 +52,18 @@ public sealed class AuditController : Controller
             filter.ToDate,
             filter.Operation,
             filter.Search,
-            filter.Page);
+            filter.Page,
+            branchId);
         var results = await _auditService.GetActivitiesAsync(activityFilter, cancellationToken);
 
         return View(new AuditIndexViewModel
         {
             Filter = activityFilter,
             Results = results,
+            Branches = isAdmin
+                ? await _branchService.GetOptionsAsync(cancellationToken)
+                : [],
+            ShowBranchFilter = isAdmin,
         });
     }
 }

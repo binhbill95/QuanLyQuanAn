@@ -69,7 +69,7 @@ Ghi chú: khi mã hoặc tên chi nhánh thay đổi, `BranchService.UpdateAsync
 
 ## 7. Hạn chế còn lại
 
-- `AuditLog` chưa được lọc theo chi nhánh và chưa có trigger audit cho bảng `Branch`.
+- `AuditLog` chưa được lọc theo chi nhánh và chưa có trigger audit cho bảng `Branch`. *(Đã xử lý phần lọc chi nhánh ngày 15/11/2026 — xem mục 9 và `docs/31_AuditBranchFilter_2026-11-15.md`; trigger audit cho `Branch` vẫn còn thiếu.)*
 - `vw_KitchenQueue` chưa có cột `BranchId`; việc lọc hiện dùng truy vấn `EXISTS` trong `OrderService`.
 - Danh mục, món, bảng giá, ca làm và khu vực (`Area`) vẫn dùng chung toàn hệ thống; chưa có thực đơn/giá riêng theo chi nhánh.
 - Một số tài liệu lịch sử vẫn ghi 25 bảng, trong khi schema hiện có 26 bảng sau khi thêm `Branch`.
@@ -95,3 +95,5 @@ Ghi chú: khi mã hoặc tên chi nhánh thay đổi, `BranchService.UpdateAsync
 ## 9. Cập nhật 2026-11-15
 
 Đã bổ sung bộ lọc chi nhánh cho ADMIN ở Nhân viên, Bàn ăn, Tài khoản và Báo cáo (kèm Xuất CSV), đồng thời seed sẵn nhân viên/tài khoản/bàn cho CN002. Chi tiết và kết quả kiểm thử xem `docs/30_AdminBranchFilter_2026-11-15.md`.
+
+Tiếp đó bổ sung lọc chi nhánh cho **Nhật ký thao tác**: thêm `AuditLog.BranchId`, trigger tự gắn chi nhánh, dropdown cho ADMIN và cột Chi nhánh trên trang `/Audit`; tổng số query filter theo chi nhánh là 14. Chi tiết xem `docs/31_AuditBranchFilter_2026-11-16.md`.

@@ -20,7 +20,8 @@
 <div class="alert alert-info">
     Nhật ký dữ liệu hiện áp dụng cho nhân viên, nhóm món, món ăn, ca làm, lịch làm,
     chấm công, hóa đơn, chi tiết món, thanh toán và tài khoản (không lưu mật khẩu).
-    Các bản ghi cũ trước khi bật ghi nhận người thao tác có thể chưa xác định được tài khoản thực hiện.
+    Bản ghi gắn chi nhánh chỉ hiển thị cho chi nhánh đó; bản ghi dùng chung (thực đơn, danh mục, ca làm)
+    do ADMIN quản trị. Các bản ghi cũ trước khi bật ghi nhận người thao tác có thể chưa xác định được tài khoản thực hiện.
 </div>
 
 <form method="get" class="card card-body mb-3">
@@ -45,7 +46,20 @@
                 }
             </select>
         </div>
-        <div class="col-sm-6 col-lg-4">
+        @if (Model.ShowBranchFilter)
+        {
+            <div class="col-sm-6 col-lg-2">
+                <label for="BranchId" class="form-label">Chi nhánh</label>
+                <select id="BranchId" name="BranchId" class="form-select">
+                    <option value="">Tất cả chi nhánh</option>
+                    @foreach (var branch in Model.Branches)
+                    {
+                        <option value="@branch.Id" selected="@(filter.BranchId == branch.Id)">@branch.Name</option>
+                    }
+                </select>
+            </div>
+        }
+        <div class="col-sm-6 col-lg-2">
             <label for="Search" class="form-label">Từ khóa</label>
             <input id="Search" name="Search" value="@filter.Search" maxlength="100"
                    class="form-control" placeholder="Người thao tác, bảng, mã bản ghi..." />
@@ -68,6 +82,7 @@
             <tr>
                 <th>Thời gian</th>
                 <th>Người thao tác</th>
+                <th>Chi nhánh</th>
                 <th>Thao tác</th>
                 <th>Đối tượng</th>
                 <th>Mã bản ghi</th>
@@ -78,7 +93,7 @@
             @if (results.Items.Count == 0)
             {
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">Không tìm thấy nhật ký phù hợp.</td>
+                    <td colspan="7" class="text-center text-muted py-4">Không tìm thấy nhật ký phù hợp.</td>
                 </tr>
             }
             else
@@ -95,6 +110,16 @@
                             else
                             {
                                 @item.Actor
+                            }
+                        </td>
+                        <td>
+                            @if (string.IsNullOrWhiteSpace(item.BranchName))
+                            {
+                                <span class="text-muted">Dùng chung</span>
+                            }
+                            else
+                            {
+                                @item.BranchName
                             }
                         </td>
                         <td>
@@ -151,6 +176,7 @@
                    asp-route-FromDate="@filter.FromDate?.ToString("yyyy-MM-dd")"
                    asp-route-ToDate="@filter.ToDate?.ToString("yyyy-MM-dd")"
                    asp-route-Operation="@filter.Action"
+                   asp-route-BranchId="@filter.BranchId"
                    asp-route-Search="@filter.Search"
                    asp-route-Page="@(results.Page - 1)">Trước</a>
             </li>
@@ -162,6 +188,7 @@
                    asp-route-FromDate="@filter.FromDate?.ToString("yyyy-MM-dd")"
                    asp-route-ToDate="@filter.ToDate?.ToString("yyyy-MM-dd")"
                    asp-route-Operation="@filter.Action"
+                   asp-route-BranchId="@filter.BranchId"
                    asp-route-Search="@filter.Search"
                    asp-route-Page="@(results.Page + 1)">Sau</a>
             </li>

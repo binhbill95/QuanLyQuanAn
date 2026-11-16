@@ -5,7 +5,8 @@ public sealed record AuditActivityFilter(
     DateOnly? ToDate,
     string? Action,
     string? Search,
-    int Page);
+    int Page,
+    int? BranchId = null);
 
 public sealed record AuditActivityDto(
     string Id,
@@ -14,6 +15,7 @@ public sealed record AuditActivityDto(
     string Action,
     DateTime ChangedAt,
     string? Actor,
+    string? BranchName,
     string? Summary,
     string? OldValues,
     string? NewValues);

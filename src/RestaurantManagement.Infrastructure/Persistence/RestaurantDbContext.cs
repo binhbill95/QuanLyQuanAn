@@ -319,6 +319,8 @@ public partial class RestaurantDbContext : DbContext
             entity.ToTable("AuditLog");
 
             entity.HasIndex(e => new { e.TableName, e.RecordId, e.ChangedAt }, "IX_AuditLog_Table_Record_ChangedAt");
+            entity.HasIndex(e => new { e.BranchId, e.ChangedAt }, "IX_AuditLog_Branch_ChangedAt");
+            entity.HasQueryFilter(e => CurrentBranchId == null || e.BranchId == CurrentBranchId);
 
             entity.Property(e => e.Action)
                 .HasMaxLength(10)
@@ -335,6 +337,10 @@ public partial class RestaurantDbContext : DbContext
             entity.HasOne(d => d.ChangedByUser).WithMany(p => p.AuditLogs)
                 .HasForeignKey(d => d.ChangedByUserId)
                 .HasConstraintName("FK_AuditLog_AppUser");
+
+            entity.HasOne(d => d.Branch).WithMany()
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_AuditLog_Branch");
         });
 
         modelBuilder.Entity<Category>(entity =>

@@ -23,7 +23,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Employee',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -35,6 +35,7 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           COALESCE(i.[BranchId], d.[BranchId]),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -50,7 +51,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'MenuItem',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -62,6 +63,7 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           NULL,
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -77,7 +79,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Invoice',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -89,6 +91,7 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           COALESCE(i.[BranchId], d.[BranchId]),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -104,7 +107,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'InvoiceDetail',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -116,6 +119,9 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           (SELECT TOP (1) inv.[BranchId]
+            FROM dbo.[Invoice] inv
+            WHERE inv.[Id] = COALESCE(i.[InvoiceId], d.[InvoiceId])),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -131,7 +137,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+    INSERT INTO dbo.[AuditLog] ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Payment',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -143,6 +149,9 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           (SELECT TOP (1) inv.[BranchId]
+            FROM dbo.[Invoice] inv
+            WHERE inv.[Id] = COALESCE(i.[InvoiceId], d.[InvoiceId])),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -159,7 +168,7 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.[AuditLog]
-        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Category',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -171,6 +180,7 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           NULL,
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -187,7 +197,7 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.[AuditLog]
-        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Shift',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -199,6 +209,7 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           NULL,
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -215,7 +226,7 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.[AuditLog]
-        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Schedule',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -227,6 +238,9 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           (SELECT TOP (1) emp.[BranchId]
+            FROM dbo.[Employee] emp
+            WHERE emp.[Id] = COALESCE(i.[EmployeeId], d.[EmployeeId])),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -243,7 +257,7 @@ BEGIN
     SET NOCOUNT ON;
 
     INSERT INTO dbo.[AuditLog]
-        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'Attendance',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
@@ -255,6 +269,10 @@ BEGIN
            CASE WHEN i.[Id] IS NULL THEN NULL
                 ELSE (SELECT i2.* FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           (SELECT TOP (1) emp.[BranchId]
+            FROM dbo.[Schedule] sc
+            INNER JOIN dbo.[Employee] emp ON emp.[Id] = sc.[EmployeeId]
+            WHERE sc.[Id] = COALESCE(i.[ScheduleId], d.[ScheduleId])),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
@@ -271,26 +289,28 @@ BEGIN
     SET NOCOUNT ON;
 
     IF NOT (UPDATE([Username]) OR UPDATE([RoleId]) OR UPDATE([EmployeeId]) OR
+            UPDATE([BranchId]) OR
             UPDATE([IsActive]) OR UPDATE([IsDeleted]) OR UPDATE([PasswordHash]))
         RETURN;
 
     INSERT INTO dbo.[AuditLog]
-        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [ChangedByUserId], [ChangedAt])
+        ([TableName], [RecordId], [Action], [OldValues], [NewValues], [BranchId], [ChangedByUserId], [ChangedAt])
     SELECT 'AppUser',
            CAST(COALESCE(i.[Id], d.[Id]) AS nvarchar(50)),
            CASE WHEN d.[Id] IS NULL THEN 'INSERT'
                 WHEN i.[Id] IS NULL THEN 'DELETE'
                 ELSE 'UPDATE' END,
            CASE WHEN d.[Id] IS NULL THEN NULL
-                ELSE (SELECT d2.[Username], d2.[RoleId], d2.[EmployeeId], d2.[IsActive], d2.[IsDeleted],
+                ELSE (SELECT d2.[Username], d2.[RoleId], d2.[EmployeeId], d2.[BranchId], d2.[IsActive], d2.[IsDeleted],
                              CONVERT(bit, CASE WHEN UPDATE([PasswordHash]) THEN 1 ELSE 0 END) AS [PasswordChanged]
                       FROM deleted d2 WHERE d2.[Id] = d.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
            CASE WHEN i.[Id] IS NULL THEN NULL
-                ELSE (SELECT i2.[Username], i2.[RoleId], i2.[EmployeeId], i2.[IsActive], i2.[IsDeleted],
+                ELSE (SELECT i2.[Username], i2.[RoleId], i2.[EmployeeId], i2.[BranchId], i2.[IsActive], i2.[IsDeleted],
                              CONVERT(bit, CASE WHEN UPDATE([PasswordHash]) THEN 1 ELSE 0 END) AS [PasswordChanged]
                       FROM inserted i2 WHERE i2.[Id] = i.[Id]
                       FOR JSON PATH, WITHOUT_ARRAY_WRAPPER) END,
+           COALESCE(i.[BranchId], d.[BranchId]),
            TRY_CONVERT(int, SESSION_CONTEXT(N'ChangedByUserId')),
            SYSUTCDATETIME()
     FROM inserted i
